@@ -1,0 +1,222 @@
+1    Program ROTLEV3B (version of March 2002):
+
+
+     Rotational part of rot-vib calculation  with:
+      150   lowest vibrational eigenvectors supplied from
+     9240   dimension vibration secular problem with
+       40   angular dvr points.
+      150   lowest vibrational eigenvectors actually used
+       40   point gauss-associated legendre integration
+       25   lowest rotational eigenvectors required for
+      450   dimension rotation secular problem
+
+     Title: WATER: RADAU SYMMETRISED COORDINATES                                   
+
+     Diagonalisation performed in core using lapack routine dsyev
+
+     Printing of hamiltonian matrix not requested
+     Printing of eigenvectors not requested
+     Printing of transformed vectors not requested
+
+     DVR3DRJZ data  to be read         from stream IVEC  =  26
+     and                               from stream IVEC2 =   4
+
+     Hamiltonian scratch file to be held on stream ISCR  =   1
+     Eigenvalues    to be written to end of stream ILEV  =  14
+     Eigenvalues & vectors to be written to stream JVEC  =   3
+     Second set            to be written to stream JVEC2 =   2
+     Transformed vectors   to be written to stream KVEC  =   8
+     Second set            to be written to stream KVEC2 =   9
+     Restart data file two to be written to stream IRF2  =  22
+
+     Radau coordinates used
+
+     Diatomic assumed homonuclear
+     even parity functions in basis set
+
+     J =  2 rotational state
+            loop over symmetric and anti-symmetric functions
+
+
+      basis functions selected
+     k =  0, i runs from    1 to  150  even
+     k =  1, i runs from  151 to  300  odd 
+     k =  2, i runs from  301 to  450  even
+
+
+      40 point gauss-associated legendre integration with k =  0
+
+     integration points           weights
+      0.998237709710559       0.452127709854D-02
+      0.990726238699457       0.104982845312D-01
+      0.977259949983774       0.164210583798D-01
+      0.957916819213792       0.222458491935D-01
+      0.932812808278677       0.279370069794D-01
+      0.902098806968874       0.334601952821D-01
+      0.865959503212260       0.387821679741D-01
+      0.824612230833312       0.438709081854D-01
+      0.778305651426519       0.486958076349D-01
+      0.727318255189927       0.532278469838D-01
+      0.671956684614180       0.574397690993D-01
+      0.612553889667980       0.613062424929D-01
+      0.549467125095128       0.648040134566D-01
+      0.483075801686179       0.679120458152D-01
+      0.413779204371605       0.706116473913D-01
+      0.341994090825758       0.728865823958D-01
+      0.268152185007254       0.747231690580D-01
+      0.192697580701371       0.761103619006D-01
+      0.116084070675255       0.770398181642D-01
+      0.038772417506051       0.775059479784D-01
+
+     computed sum of weights     0.199999999999003D+01
+     exact    sum of weights     0.200000000000000D+01
+
+
+      40 point gauss-associated legendre integration with k =  1
+
+     integration points           weights
+      0.995739970053516       0.607861797761D-04
+      0.985742929506700       0.363330627498D-03
+      0.970098096627758       0.108635246364D-02
+      0.948896305445434       0.238455439166D-02
+      0.922259214258616       0.437948977065D-02
+      0.890339459837991       0.715223967587D-02
+      0.853319898720650       0.107381974782D-01
+      0.811412585793422       0.151242328303D-01
+      0.764857567426475       0.202483863398D-01
+      0.713921509314801       0.260021161862D-01
+      0.658896170202595       0.322349866602D-01
+      0.600096731248639       0.387615629147D-01
+      0.537859990962593       0.453701626128D-01
+      0.472542436194848       0.518330194500D-01
+      0.404518200291536       0.579173406622D-01
+      0.334176920139459       0.633966943263D-01
+      0.261921504390150       0.680621449166D-01
+      0.188165825654151       0.717325680782D-01
+      0.113332349888654       0.742636172838D-01
+      0.037849716559604       0.755548838145D-01
+
+     computed sum of weights     0.133333333332550D+01
+     exact    sum of weights     0.133333333333333D+01
+
+
+      40 point gauss-associated legendre integration with k =  1
+
+     integration points           weights
+      0.995739970053516       0.607861797761D-04
+      0.985742929506700       0.363330627498D-03
+      0.970098096627758       0.108635246364D-02
+      0.948896305445434       0.238455439166D-02
+      0.922259214258616       0.437948977065D-02
+      0.890339459837991       0.715223967587D-02
+      0.853319898720650       0.107381974782D-01
+      0.811412585793422       0.151242328303D-01
+      0.764857567426475       0.202483863398D-01
+      0.713921509314801       0.260021161862D-01
+      0.658896170202595       0.322349866602D-01
+      0.600096731248639       0.387615629147D-01
+      0.537859990962593       0.453701626128D-01
+      0.472542436194848       0.518330194500D-01
+      0.404518200291536       0.579173406622D-01
+      0.334176920139459       0.633966943263D-01
+      0.261921504390150       0.680621449166D-01
+      0.188165825654151       0.717325680782D-01
+      0.113332349888654       0.742636172838D-01
+      0.037849716559604       0.755548838145D-01
+
+     computed sum of weights     0.133333333332550D+01
+     exact    sum of weights     0.133333333333333D+01
+
+     hamiltonian construction complete
+1
+     J =  2 rotational state,    450 basis functions
+            e parity, symmetric |jk> + |j-k> functions in basis
+            even parity radial functions in basis set
+
+
+     lowest  25 eigenvalues in hartrees
+
+      0.250016474288D-01      0.253014701710D-01      0.322831892510D-01      0.326392348694D-01      0.393918791025D-01
+
+      0.398233543947D-01      0.416600173056D-01      0.419505678099D-01      0.421446634187D-01      0.463110407351D-01
+
+      0.468493728047D-01      0.488653372940D-01      0.492096677015D-01      0.493479471665D-01      0.530128135453D-01
+
+      0.537138631192D-01      0.558974403865D-01      0.563135246551D-01      0.563958670470D-01      0.578038717930D-01
+
+      0.580540340883D-01      0.580862946374D-01      0.589092453650D-01      0.591747242501D-01      0.594486998782D-01
+
+
+
+     lowest  25 eigenvalues in wavenumbers relative to ezero =      0.541574739400D+04
+
+      0.714797748095D+02      0.137283258436D+03      0.166959342837D+04      0.174773640662D+04      0.322977046068D+04
+
+      0.332446833819D+04      0.372756923999D+04      0.379133770267D+04      0.383393676342D+04      0.474835085838D+04
+
+      0.486650108695D+04      0.530895413524D+04      0.538452592195D+04      0.541487475554D+04      0.621921992605D+04
+
+      0.637308251767D+04      0.685232231738D+04      0.694364225580D+04      0.696171432130D+04      0.727073563352D+04
+
+      0.732563990921D+04      0.733272028110D+04      0.751333708260D+04      0.757160296109D+04      0.763173365906D+04
+
+
+     diagonalisation complete
+1
+     eigenvector transformation:
+     input:   dvr3d data,          ivec = 26
+              rotlev3b data        jvec =  3
+     output:  transformed vectors, kvec =  8
+
+
+
+     transformation completed successfully
+
+     for rotational state: jrot =  2, kmin =  1, ipar =  0.  stored    25 vib-rot levels
+     nend =  26880
+1
+     J =  2 rotational state,    300 basis functions
+            f parity, anti-symmetric |jk> - |j-k> functions in basis
+            odd parity radial functions in basis set
+
+
+     lowest  25 eigenvalues in hartrees
+
+      0.252956675296D-01      0.326338030705D-01      0.398184483157D-01      0.419447077136D-01      0.422168562876D-01
+
+      0.468451455036D-01      0.492041751839D-01      0.494244769040D-01      0.537104641030D-01      0.563086017592D-01
+
+      0.564764408226D-01      0.580764608322D-01      0.581294549958D-01      0.591679576839D-01      0.604201771845D-01
+
+      0.632568481760D-01      0.633627667735D-01      0.652448822349D-01      0.652610534313D-01      0.663142112500D-01
+
+      0.670047444924D-01      0.700476430390D-01      0.700678190305D-01      0.722176704718D-01      0.722727445503D-01
+
+
+
+     lowest  25 eigenvalues in wavenumbers relative to ezero =      0.541574739400D+04
+
+      0.136009725891D+03      0.174654426458D+04      0.332339157836D+04      0.379005156023D+04      0.384978126619D+04
+
+      0.486557330164D+04      0.538332045372D+04      0.543167109090D+04      0.637233651987D+04      0.694256180507D+04
+
+      0.697939822040D+04      0.733056201040D+04      0.734219288453D+04      0.757011787153D+04      0.784494827557D+04
+
+      0.846752557486D+04      0.849077201922D+04      0.890384860244D+04      0.890739776968D+04      0.913853918595D+04
+
+      0.929009370970D+04      0.995793272408D+04      0.996236084221D+04      0.104341986790D+05      0.104462860416D+05
+
+
+     diagonalisation complete
+1
+     eigenvector transformation:
+     input:   dvr3d data,          ivec = 26
+              rotlev3b data        jvec =  2
+     output:  transformed vectors, kvec =  9
+
+
+
+     transformation completed successfully
+
+     for rotational state: jrot =  2, kmin =  0, ipar =  1.  stored    25 vib-rot levels
+     nend =  17640

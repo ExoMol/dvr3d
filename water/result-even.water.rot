@@ -1,0 +1,72 @@
+1    Program ROTLEV3B (version of March 2002):
+
+
+     Rotational part of rot-vib calculation  with:
+      150   lowest vibrational eigenvectors supplied from
+     9240   dimension vibration secular problem with
+       40   angular dvr points.
+      150   lowest vibrational eigenvectors actually used
+       40   point gauss-associated legendre integration
+       25   lowest rotational eigenvectors required for
+      450   dimension rotation secular problem
+
+     Title: WATER: RADAU SYMMETRISED COORDINATES                                   
+
+     Diagonalisation performed in core using lapack routine dsyev
+
+     Printing of hamiltonian matrix not requested
+     Printing of eigenvectors not requested
+     Printing of transformed vectors not requested
+
+     DVR3DRJZ data  to be read         from stream IVEC  =  26
+     and                               from stream IVEC2 =   4
+
+     Hamiltonian scratch file to be held on stream ISCR  =   1
+     Eigenvalues    to be written to end of stream ILEV  =  14
+     Eigenvalues & vectors to be written to stream JVEC  =   3
+     Second set            to be written to stream JVEC2 =   2
+     Transformed vectors   to be written to stream KVEC  =   8
+     Second set            to be written to stream KVEC2 =   9
+     Restart data file two to be written to stream IRF2  =  22
+
+     Radau coordinates used
+
+     Diatomic assumed homonuclear
+     even parity functions in basis set
+
+     J =  2 rotational state
+            loop over symmetric and anti-symmetric functions
+
+
+      basis functions selected
+     k =  0, i runs from    1 to  150  even
+     k =  1, i runs from  151 to  300  odd 
+     k =  2, i runs from  301 to  450  even
+
+
+      40 point gauss-associated legendre integration with k =  0
+
+     integration points           weights
+      0.998237709710559       0.452127709854D-02
+      0.990726238699457       0.104982845312D-01
+      0.977259949983774       0.164210583798D-01
+      0.957916819213792       0.222458491935D-01
+      0.932812808278677       0.279370069794D-01
+      0.902098806968874       0.334601952821D-01
+      0.865959503212260       0.387821679741D-01
+      0.824612230833312       0.438709081854D-01
+      0.778305651426519       0.486958076349D-01
+      0.727318255189927       0.532278469838D-01
+      0.671956684614180       0.574397690993D-01
+      0.612553889667980       0.613062424929D-01
+      0.549467125095128       0.648040134566D-01
+      0.483075801686179       0.679120458152D-01
+      0.413779204371605       0.706116473913D-01
+      0.341994090825758       0.728865823958D-01
+      0.268152185007254       0.747231690580D-01
+      0.192697580701371       0.761103619006D-01
+      0.116084070675255       0.770398181642D-01
+      0.038772417506051       0.775059479784D-01
+
+     computed sum of weights     0.199999999999003D+01
+     exact    sum of weights     0.200000000000000D+01

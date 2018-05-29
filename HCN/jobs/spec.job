@@ -1,0 +1,8 @@
+ &PRT zsort=.true., zout=.false., zpfun=.false., GZ=3481.50, smin=1.0d-40, 
+      emin=0.0d0, emax=1.8d4, wsmax=9000.0d0, wsmin=0.0d0 /
+Spectra for dipole moment of HCN
+     1.0     1.0
+ 2000.0     1.0d-40       0.0   18000.0    1.0       20285.9
+ &SPE  zplot=.true., zlist=.true., zemit=.false., emax1=60000.0d6,
+       emax2=60000.0d6, zprof=.true. /
+

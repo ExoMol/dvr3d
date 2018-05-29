@@ -1,0 +1,702 @@
+     Program DVR3DRJZ (version of June 2010)
+
+     Full triatomic vibrational problem with
+
+        28   radial r1 dvr points used,
+        28   radial r2 dvr points used,
+        40   angular dvr points used, with
+       100   lowest eigenvectors chosen from
+      2500   maximum dimension secular problem
+
+     Title:  WATER: RADAU SYMMETRISED COORDINATES-ATOMIC                            
+
+     Morse oscillators used for r1 basis
+     Morse oscillators used for r2 basis
+
+     Quadrature approximation used for the r2**(-2) terms
+
+     Problem solved in the order: r2 -> r1 -> theta
+     final basis comprises 2500 lowest functions
+
+     Printing of L-matrix not requested
+     Printing of hamiltonian matrix not requested
+     Printing of radial matrix elements not requested
+     Printing of eigenvectors not requested
+
+     Wavefunction amplitudes written to stream IWAVE =  26
+     Wavefunctions for dipole written to stream IDIP =  69
+     Wavefunctions for expect written to stream IDIPD =  70
+
+     Calculation performed in Radau coordinates with Z axis
+     perpendicular to the plane
+zlin not implemented with z-perp
+
+     Diatomic assumed homonuclear
+     Even parity functions in basis set
+
+     ***  vibrational part of rot-vib calculation  ***
+
+     J =  1 rotational state
+            with symmetric |Jk> + |J-k> functions in basis
+     Number of angular grid points to be kept constant with k
+
+     z axis embedded perp to the molecular plane
+
+     Routine DSYEV to do in core diagonalisation
+
+     Vibrational nuclear mass in AMU:    1.007537    1.007537    1.007537
+     Rotational  nuclear mass in AMU:    1.007537    1.007537    1.007537
+
+
+     Morse function parameters for r1 basis
+     r equilibrium =  1.8000 bohr, dissociation energy  0.7000000D-01 hartree &  vibrational frequency =  0.1180000D-01 hartree
+
+     Constants used to construct morse oscillators:
+     reduced mass =   0.1142398D+04 a.u., beta =  1.0659 (1/bohr), a =   0.2372881D+02 and u =   24
+
+      28 POINT GAUSS-LAGUERRE INTEGRATION
+     INTEGRATION POINTS           WEIGHTS         CORRESPONDING R1
+
+      5.597128323728561      -0.307025283642D+02      3.15510
+      7.555483079788106      -0.318476819200D+02      2.87364
+      9.534917953326982      -0.329356892323D+02      2.65534
+     11.608685810353077      -0.340441846536D+02      2.47072
+     13.804029753044368      -0.351988118027D+02      2.30822
+     16.136023415545427      -0.364123206474D+02      2.16179
+     18.615353682387720      -0.376928006270D+02      2.02769
+     21.251006097219722      -0.390463716069D+02      1.90346
+     24.051445770201649      -0.404783082427D+02      1.78733
+     27.025250113123381      -0.419936030802D+02      1.67796
+     30.181520907130952      -0.435972994462D+02      1.57434
+     33.530211090821261      -0.452947252089D+02      1.47563
+     37.082433773940785      -0.470916883772D+02      1.38116
+     40.850796100332587      -0.489946686496D+02      1.29036
+     44.849793845672679      -0.510110292428D+02      1.20275
+     49.096306159784767      -0.531492719389D+02      1.11788
+     53.610242289327090      -0.554193627427D+02      1.03536
+     58.415416021434034      -0.578331662886D+02      0.95483
+     63.540766077535423      -0.604050472413D+02      0.87593
+     69.022116894275001      -0.631527335080D+02      0.79830
+     74.904816388295117      -0.660986045005D+02      0.72157
+     81.247867898477708      -0.692717026045D+02      0.64531
+     88.130768985167236      -0.727110515679D+02      0.56902
+     95.665656006157960      -0.764715277135D+02      0.49206
+    104.020996967659059      -0.806352616101D+02      0.41350
+    113.474399445708855      -0.853368934562D+02      0.33190
+    124.557387584421349      -0.908321712861D+02      0.24447
+    138.639179565139074      -0.977699077734D+02      0.14399
+
+     COMPUTED SUM OF POINTS     0.145600000000000D+04 & WEIGHTS     0.999999999999999D+00
+     EXACT    SUM OF POINTS     0.145600000000000D+04 & WEIGHTS     0.100000000000000D+01
+
+
+      40 point Gauss-Jacobi integration with alpha = beta =  1.000
+
+     integration points           weights
+
+      0.995739970053491       0.607861797729D-04
+      0.985742929506636       0.363330627483D-03
+      0.970098096627659       0.108635246384D-02
+      0.948896305445312       0.238455439212D-02
+      0.922259214258482       0.437948977112D-02
+      0.890339459837855       0.715223967630D-02
+      0.853319898720517       0.107381974785D-01
+      0.811412585793299       0.151242328306D-01
+      0.764857567426359       0.202483863399D-01
+      0.713921509314696       0.260021161863D-01
+      0.658896170202501       0.322349866601D-01
+      0.600096731248557       0.387615629145D-01
+      0.537859990962520       0.453701626125D-01
+      0.472542436194787       0.518330194496D-01
+      0.404518200291486       0.579173406617D-01
+      0.334176920139417       0.633966943257D-01
+      0.261921504390120       0.680621449159D-01
+      0.188165825654133       0.717325680775D-01
+      0.113332349888646       0.742636172831D-01
+      0.037849716559599       0.755548838138D-01
+
+     Calculate block for K =  0
+     q symmetry =  0
+
+     starting the 2d calculations.
+
+
+ Time at beginning of 2d loop mkmain is.........
+
+         0 secs CPU time used
+
+     selecting  2500 energies between 0.139226E-01 and 0.214306E+00 in hartrees
+     selecting  2500 energies between 0.305566E+04 and 0.470346E+05 in wavenumbers
+     for gamma =  1 selected  32 energies.
+     for gamma =  2 selected  33 energies.
+     for gamma =  3 selected  34 energies.
+     for gamma =  4 selected  37 energies.
+     for gamma =  5 selected  40 energies.
+     for gamma =  6 selected  47 energies.
+     for gamma =  7 selected  56 energies.
+     for gamma =  8 selected  66 energies.
+     for gamma =  9 selected  73 energies.
+     for gamma = 10 selected  80 energies.
+     for gamma = 11 selected  84 energies.
+     for gamma = 12 selected  88 energies.
+     for gamma = 13 selected  90 energies.
+     for gamma = 14 selected  93 energies.
+     for gamma = 15 selected  94 energies.
+     for gamma = 16 selected  94 energies.
+     for gamma = 17 selected  93 energies.
+     for gamma = 18 selected  91 energies.
+     for gamma = 19 selected  89 energies.
+     for gamma = 20 selected  88 energies.
+     for gamma = 21 selected  86 energies.
+     for gamma = 22 selected  82 energies.
+     for gamma = 23 selected  79 energies.
+     for gamma = 24 selected  75 energies.
+     for gamma = 25 selected  72 energies.
+     for gamma = 26 selected  68 energies.
+     for gamma = 27 selected  64 energies.
+     for gamma = 28 selected  60 energies.
+     for gamma = 29 selected  57 energies.
+     for gamma = 30 selected  53 energies.
+     for gamma = 31 selected  51 energies.
+     for gamma = 32 selected  48 energies.
+     for gamma = 33 selected  44 energies.
+     for gamma = 34 selected  42 energies.
+     for gamma = 35 selected  40 energies.
+     for gamma = 36 selected  38 energies.
+     for gamma = 37 selected  37 energies.
+     for gamma = 38 selected  35 energies.
+     for gamma = 39 selected  34 energies.
+     for gamma = 40 selected  33 energies.
+                         total =  2500
+
+
+ Time at end of 2d loop is.........
+
+        13 secs CPU time used
+
+     building the 3d hamiltonian.
+
+
+ Time at end of 3d ham building is.........
+
+        81 secs CPU time used
+
+     diagonalising the 3d hamiltonian.
+
+     Solutions with J =  1 k =  0
+
+     even parity solutions
+
+     lowest 100 eigenvalues in hartrees:
+
+      0.202720076939D-01      0.317647454762D-01      0.347480018918D-01      0.420633345495D-01      0.430547070033D-01
+
+      0.455783590234D-01      0.487939737011D-01      0.522346105392D-01      0.535021273524D-01      0.556811684426D-01
+
+      0.561396190054D-01      0.589416844446D-01      0.613746348860D-01      0.618866704538D-01      0.624117282517D-01
+
+      0.642951767036D-01      0.657415897175D-01      0.658449392719D-01      0.685491482290D-01      0.687859312785D-01
+
+      0.700027124626D-01      0.702993696562D-01      0.718564997376D-01      0.735076487262D-01      0.741938946106D-01
+
+      0.753795811163D-01      0.755966771951D-01      0.765426731846D-01      0.773900001353D-01      0.776734687121D-01
+
+      0.778086992809D-01      0.782369339956D-01      0.808624612005D-01      0.809763695986D-01      0.815243851388D-01
+
+      0.817572771012D-01      0.824590162119D-01      0.842883475618D-01      0.843620353400D-01      0.845171478201D-01
+
+      0.852952268922D-01      0.855154365641D-01      0.864220561063D-01      0.871709589953D-01      0.881965130764D-01
+
+      0.883253401767D-01      0.888847495470D-01      0.890744848500D-01      0.895645285969D-01      0.897301945383D-01
+
+      0.904351563275D-01      0.917558701590D-01      0.919636063461D-01      0.926747645452D-01      0.927131511675D-01
+
+      0.929852616659D-01      0.933011833810D-01      0.936145142632D-01      0.954809199668D-01      0.955359454473D-01
+
+      0.960526668539D-01      0.960767061136D-01      0.962440973169D-01      0.965918601396D-01      0.973335967210D-01
+
+      0.978034038124D-01      0.983998781853D-01      0.990990812344D-01      0.993225506625D-01      0.996934658907D-01
+
+      0.100029911800D+00      0.100263809727D+00      0.100352722746D+00      0.100571958265D+00      0.100671071390D+00
+
+      0.101129804528D+00      0.101482790591D+00      0.102486236362D+00      0.103171803115D+00      0.103381010773D+00
+
+      0.103395021163D+00      0.103862989454D+00      0.104041652361D+00      0.104509895381D+00      0.104810989537D+00
+
+      0.105495793853D+00      0.105628607472D+00      0.106208464211D+00      0.107080871251D+00      0.107258596769D+00
+
+      0.107406574235D+00      0.107698704087D+00      0.107824707908D+00      0.107864871898D+00      0.108158059715D+00
+
+      0.108659282684D+00      0.108830824753D+00      0.108955423208D+00      0.109552429951D+00      0.109796565682D+00
+
+
+
+     Lowest 100 eigenvalues in wavenumbers:
+
+      0.444919126634D+04      0.697155556983D+04      0.762630464995D+04      0.923183453444D+04      0.944941563099D+04
+
+      0.100032932092D+05      0.107090390315D+05      0.114641715079D+05      0.117423592839D+05      0.122206035078D+05
+
+      0.123212217727D+05      0.129362040314D+05      0.134701749147D+05      0.135825537285D+05      0.136977905912D+05
+
+      0.141111597320D+05      0.144286106844D+05      0.144512932890D+05      0.150447985331D+05      0.150967664038D+05
+
+      0.153638189967D+05      0.154289277227D+05      0.157706782619D+05      0.161330635653D+05      0.162836771228D+05
+
+      0.165439052228D+05      0.165915523030D+05      0.167991744171D+05      0.169851411811D+05      0.170473553404D+05
+
+      0.170770350186D+05      0.171710216716D+05      0.177472582677D+05      0.177722582705D+05      0.178925337752D+05
+
+      0.179436476510D+05      0.180976615785D+05      0.184991533887D+05      0.185153259861D+05      0.185493692394D+05
+
+      0.187201378512D+05      0.187684682861D+05      0.189674482692D+05      0.191318134492D+05      0.193568965456D+05
+
+      0.193851708250D+05      0.195079469862D+05      0.195495890704D+05      0.196571412375D+05      0.196935007077D+05
+
+      0.198482219314D+05      0.201380851029D+05      0.201836779245D+05      0.203397591028D+05      0.203481839923D+05
+
+      0.204079053417D+05      0.204772421413D+05      0.205460103189D+05      0.209556390089D+05      0.209677157055D+05
+
+      0.210811229420D+05      0.210863989494D+05      0.211231370709D+05      0.211994621856D+05      0.213622545429D+05
+
+      0.214653652776D+05      0.215962762664D+05      0.217497335927D+05      0.217987794614D+05      0.218801859416D+05
+
+      0.219540272811D+05      0.220053619407D+05      0.220248760921D+05      0.220729927251D+05      0.220947455409D+05
+
+      0.221954258239D+05      0.222728973073D+05      0.224931281906D+05      0.226435926962D+05      0.226895084682D+05
+
+      0.226925833932D+05      0.227952905580D+05      0.228345025323D+05      0.229372699931D+05      0.230033525196D+05
+
+      0.231536496895D+05      0.231827989087D+05      0.233100627484D+05      0.235015339554D+05      0.235405401966D+05
+
+      0.235730174954D+05      0.236371325849D+05      0.236647872261D+05      0.236736022026D+05      0.237379494886D+05
+
+      0.238479552111D+05      0.238856043422D+05      0.239129505414D+05      0.240439783717D+05      0.240975599695D+05
+
+
+
+ Time at end of diagonalising 3d is.........
+
+       102 secs CPU time used
+
+
+
+ Time at start of wavefunction generation is.........
+
+       102 secs CPU time used
+
+
+
+ Time at end of wavefunction generation is.........
+
+       109 secs CPU time used
+
+
+
+      40 point Gauss-Jacobi integration with alpha = beta =  0.707
+
+     integration points           weights
+
+      0.996534037965829       0.190177619112D-03
+      0.987239801011296       0.905712101768D-03
+      0.972208966320996       0.229308229664D-02
+      0.951529781513212       0.442848214859D-02
+      0.925322533527290       0.733913033417D-02
+      0.893739516434325       0.110107781842D-01
+      0.856964229246797       0.153923141286D-01
+      0.815210327533679       0.203998532780D-01
+      0.768720387290489       0.259210600827D-01
+      0.717764497483038       0.318199427096D-01
+      0.662638691679485       0.379421488495D-01
+      0.603663228552046       0.441206891869D-01
+      0.541180731471512       0.501819570876D-01
+      0.475554198094385       0.559518796375D-01
+      0.407164891545512       0.612620172080D-01
+      0.336410125465901       0.659554222340D-01
+      0.263700955802644       0.698920707899D-01
+      0.189459792755477       0.729536915118D-01
+      0.114117946756168       0.750478343852D-01
+      0.038113122739065       0.761110458892D-01
+
+     Calculate block for K =  1
+     q symmetry =  0
+
+     starting the 2d calculations.
+
+
+ Time at beginning of 2d loop mkmain is.........
+
+       109 secs CPU time used
+
+     selecting  2500 energies between 0.140220E-01 and 0.214849E+00 in hartrees
+     selecting  2500 energies between 0.307747E+04 and 0.471538E+05 in wavenumbers
+     for gamma =  1 selected  32 energies.
+     for gamma =  2 selected  33 energies.
+     for gamma =  3 selected  34 energies.
+     for gamma =  4 selected  36 energies.
+     for gamma =  5 selected  39 energies.
+     for gamma =  6 selected  47 energies.
+     for gamma =  7 selected  56 energies.
+     for gamma =  8 selected  65 energies.
+     for gamma =  9 selected  73 energies.
+     for gamma = 10 selected  79 energies.
+     for gamma = 11 selected  84 energies.
+     for gamma = 12 selected  88 energies.
+     for gamma = 13 selected  91 energies.
+     for gamma = 14 selected  93 energies.
+     for gamma = 15 selected  94 energies.
+     for gamma = 16 selected  94 energies.
+     for gamma = 17 selected  93 energies.
+     for gamma = 18 selected  92 energies.
+     for gamma = 19 selected  89 energies.
+     for gamma = 20 selected  88 energies.
+     for gamma = 21 selected  86 energies.
+     for gamma = 22 selected  82 energies.
+     for gamma = 23 selected  80 energies.
+     for gamma = 24 selected  75 energies.
+     for gamma = 25 selected  72 energies.
+     for gamma = 26 selected  69 energies.
+     for gamma = 27 selected  64 energies.
+     for gamma = 28 selected  60 energies.
+     for gamma = 29 selected  57 energies.
+     for gamma = 30 selected  53 energies.
+     for gamma = 31 selected  51 energies.
+     for gamma = 32 selected  48 energies.
+     for gamma = 33 selected  44 energies.
+     for gamma = 34 selected  42 energies.
+     for gamma = 35 selected  40 energies.
+     for gamma = 36 selected  38 energies.
+     for gamma = 37 selected  37 energies.
+     for gamma = 38 selected  35 energies.
+     for gamma = 39 selected  34 energies.
+     for gamma = 40 selected  33 energies.
+                         total =  2500
+
+
+ Time at end of 2d loop is.........
+
+       123 secs CPU time used
+
+     building the 3d hamiltonian.
+
+
+ Time at end of 3d ham building is.........
+
+       193 secs CPU time used
+
+     diagonalising the 3d hamiltonian.
+
+     Solutions with J =  1 k =  1
+
+     even parity solutions
+
+     lowest 100 eigenvalues in hartrees:
+
+      0.201697380795D-01      0.316543590214D-01      0.346479121065D-01      0.419464876587D-01      0.429414295166D-01
+
+      0.454697564496D-01      0.486957833126D-01      0.520992382274D-01      0.533756810231D-01      0.555685256336D-01
+
+      0.560264076929D-01      0.588340879546D-01      0.612220823324D-01      0.617266557909D-01      0.623150366379D-01
+
+      0.641663098964D-01      0.656085615057D-01      0.657200987009D-01      0.684353598076D-01      0.686707224901D-01
+
+      0.697750831816D-01      0.700775945759D-01      0.717487459125D-01      0.733398103515D-01      0.740413582995D-01
+
+      0.752322854157D-01      0.755007366395D-01      0.763750003540D-01      0.770619159300D-01      0.773515230496D-01
+
+      0.776055298805D-01      0.780645059244D-01      0.807395562245D-01      0.808546654934D-01      0.813340176311D-01
+
+      0.815179263292D-01      0.822350864706D-01      0.838361635290D-01      0.838928873651D-01      0.842046647782D-01
+
+      0.850569212649D-01      0.851735907832D-01      0.862346028787D-01      0.870260520604D-01      0.880628388040D-01
+
+      0.882269781300D-01      0.885822230515D-01      0.886760730239D-01      0.892853693766D-01      0.895480691187D-01
+
+      0.901910949400D-01      0.909750829475D-01      0.910967517193D-01      0.924838297125D-01      0.925731252278D-01
+
+      0.926530372226D-01      0.930398687315D-01      0.933706886405D-01      0.952314968552D-01      0.952884952689D-01
+
+      0.954453703501D-01      0.954985225552D-01      0.960131887373D-01      0.963271186686D-01      0.971399406219D-01
+
+      0.975201126435D-01      0.981896246798D-01      0.985250564094D-01      0.987173243693D-01      0.989262681710D-01
+
+      0.996628698222D-01      0.999505506573D-01      0.999780435455D-01      0.100165784743D+00      0.100517118213D+00
+
+      0.100916159591D+00      0.101127888839D+00      0.102139126508D+00      0.102477461294D+00      0.102610454238D+00
+
+      0.102785529013D+00      0.103657837794D+00      0.103858194748D+00      0.104224380152D+00      0.104365660870D+00
+
+      0.105234715649D+00      0.105356718223D+00      0.105921332387D+00      0.106550246153D+00      0.106755619430D+00
+
+      0.106821187969D+00      0.106915766564D+00      0.106987293736D+00      0.107473812120D+00      0.107919699576D+00
+
+      0.108350765943D+00      0.108478072262D+00      0.108493994280D+00      0.109148676640D+00      0.109418096762D+00
+
+
+
+     Lowest 100 eigenvalues in wavenumbers:
+
+      0.442674568118D+04      0.694732854419D+04      0.760433748196D+04      0.920618960701D+04      0.942455409718D+04
+
+      0.997945770014D+04      0.106874887329D+05      0.114344607207D+05      0.117146075233D+05      0.121958812697D+05
+
+      0.122963747625D+05      0.129125893322D+05      0.134366935004D+05      0.135474345705D+05      0.136765692356D+05
+
+      0.140828767380D+05      0.143994143676D+05      0.144238939516D+05      0.150198248621D+05      0.150714809983D+05
+
+      0.153138601459D+05      0.153802537204D+05      0.157470290316D+05      0.160962273011D+05      0.162501992732D+05
+
+      0.165115775543D+05      0.165704957857D+05      0.167623744857D+05      0.169131350235D+05      0.169766964371D+05
+
+      0.170324444908D+05      0.171331780855D+05      0.177202837443D+05      0.177455473078D+05      0.178507529380D+05
+
+      0.178911162304D+05      0.180485146827D+05      0.183999104681D+05      0.184123599107D+05      0.184807871412D+05
+
+      0.186678358132D+05      0.186934418119D+05      0.189263070426D+05      0.191000100542D+05      0.193275584349D+05
+
+      0.193635828517D+05      0.194415500973D+05      0.194621477847D+05      0.195958728726D+05      0.196535287997D+05
+
+      0.197946566501D+05      0.199667221233D+05      0.199934253312D+05      0.202978537522D+05      0.203174518519D+05
+
+      0.203349905069D+05      0.204198902069D+05      0.204924967820D+05      0.209008969653D+05      0.209134066707D+05
+
+      0.209478367701D+05      0.209595023304D+05      0.210724584972D+05      0.211413581508D+05      0.213197519434D+05
+
+      0.214031900549D+05      0.215501309573D+05      0.216237497100D+05      0.216659476482D+05      0.217118055106D+05
+
+      0.218734708810D+05      0.219366095241D+05      0.219426435154D+05      0.219838479442D+05      0.220609567254D+05
+
+      0.221485361817D+05      0.221950053788D+05      0.224169463859D+05      0.224912022861D+05      0.225203908623D+05
+
+      0.225588153328D+05      0.227502649744D+05      0.227942382417D+05      0.228746066454D+05      0.229056141779D+05
+
+      0.230963496487D+05      0.231231261179D+05      0.232470445992D+05      0.233850752114D+05      0.234301494342D+05
+
+      0.234445400648D+05      0.234652976664D+05      0.234809960656D+05      0.235877745048D+05      0.236856354867D+05
+
+      0.237802436154D+05      0.238081841219D+05      0.238116786008D+05      0.239553647658D+05      0.240144956455D+05
+
+
+
+ Time at end of diagonalising 3d is.........
+
+       213 secs CPU time used
+
+
+
+ Time at start of wavefunction generation is.........
+
+       213 secs CPU time used
+
+
+
+ Time at end of wavefunction generation is.........
+
+       219 secs CPU time used
+
+
+
+      40 point Gauss-Jacobi integration with alpha = beta =  0.707
+
+     integration points           weights
+
+      0.996534037965829       0.190177619112D-03
+      0.987239801011296       0.905712101768D-03
+      0.972208966320996       0.229308229664D-02
+      0.951529781513212       0.442848214859D-02
+      0.925322533527290       0.733913033417D-02
+      0.893739516434325       0.110107781842D-01
+      0.856964229246797       0.153923141286D-01
+      0.815210327533679       0.203998532780D-01
+      0.768720387290489       0.259210600827D-01
+      0.717764497483038       0.318199427096D-01
+      0.662638691679485       0.379421488495D-01
+      0.603663228552046       0.441206891869D-01
+      0.541180731471512       0.501819570876D-01
+      0.475554198094385       0.559518796375D-01
+      0.407164891545512       0.612620172080D-01
+      0.336410125465901       0.659554222340D-01
+      0.263700955802644       0.698920707899D-01
+      0.189459792755477       0.729536915118D-01
+      0.114117946756168       0.750478343852D-01
+      0.038113122739065       0.761110458892D-01
+
+     Calculate block for K =  1
+     q symmetry =  1
+
+     starting the 2d calculations.
+
+
+ Time at beginning of 2d loop mkmain is.........
+
+       219 secs CPU time used
+
+     selecting  2500 energies between 0.140220E-01 and 0.214849E+00 in hartrees
+     selecting  2500 energies between 0.307747E+04 and 0.471538E+05 in wavenumbers
+     for gamma =  1 selected  32 energies.
+     for gamma =  2 selected  33 energies.
+     for gamma =  3 selected  34 energies.
+     for gamma =  4 selected  36 energies.
+     for gamma =  5 selected  39 energies.
+     for gamma =  6 selected  47 energies.
+     for gamma =  7 selected  56 energies.
+     for gamma =  8 selected  65 energies.
+     for gamma =  9 selected  73 energies.
+     for gamma = 10 selected  79 energies.
+     for gamma = 11 selected  84 energies.
+     for gamma = 12 selected  88 energies.
+     for gamma = 13 selected  91 energies.
+     for gamma = 14 selected  93 energies.
+     for gamma = 15 selected  94 energies.
+     for gamma = 16 selected  94 energies.
+     for gamma = 17 selected  93 energies.
+     for gamma = 18 selected  92 energies.
+     for gamma = 19 selected  89 energies.
+     for gamma = 20 selected  88 energies.
+     for gamma = 21 selected  86 energies.
+     for gamma = 22 selected  82 energies.
+     for gamma = 23 selected  80 energies.
+     for gamma = 24 selected  75 energies.
+     for gamma = 25 selected  72 energies.
+     for gamma = 26 selected  69 energies.
+     for gamma = 27 selected  64 energies.
+     for gamma = 28 selected  60 energies.
+     for gamma = 29 selected  57 energies.
+     for gamma = 30 selected  53 energies.
+     for gamma = 31 selected  51 energies.
+     for gamma = 32 selected  48 energies.
+     for gamma = 33 selected  44 energies.
+     for gamma = 34 selected  42 energies.
+     for gamma = 35 selected  40 energies.
+     for gamma = 36 selected  38 energies.
+     for gamma = 37 selected  37 energies.
+     for gamma = 38 selected  35 energies.
+     for gamma = 39 selected  34 energies.
+     for gamma = 40 selected  33 energies.
+                         total =  2500
+
+
+ Time at end of 2d loop is.........
+
+       234 secs CPU time used
+
+     building the 3d hamiltonian.
+
+
+ Time at end of 3d ham building is.........
+
+       302 secs CPU time used
+
+     diagonalising the 3d hamiltonian.
+
+     Solutions with J =  1 k =  1
+
+     even parity solutions
+
+     lowest 100 eigenvalues in hartrees:
+
+      0.201697380795D-01      0.316543590214D-01      0.346479121065D-01      0.419464876587D-01      0.429414295166D-01
+
+      0.454697564496D-01      0.486957833126D-01      0.520992382274D-01      0.533756810231D-01      0.555685256336D-01
+
+      0.560264076929D-01      0.588340879546D-01      0.612220823324D-01      0.617266557909D-01      0.623150366379D-01
+
+      0.641663098964D-01      0.656085615057D-01      0.657200987009D-01      0.684353598076D-01      0.686707224901D-01
+
+      0.697750831816D-01      0.700775945759D-01      0.717487459125D-01      0.733398103515D-01      0.740413582995D-01
+
+      0.752322854157D-01      0.755007366395D-01      0.763750003540D-01      0.770619159300D-01      0.773515230496D-01
+
+      0.776055298805D-01      0.780645059244D-01      0.807395562245D-01      0.808546654934D-01      0.813340176311D-01
+
+      0.815179263292D-01      0.822350864706D-01      0.838361635290D-01      0.838928873651D-01      0.842046647782D-01
+
+      0.850569212649D-01      0.851735907832D-01      0.862346028787D-01      0.870260520604D-01      0.880628388040D-01
+
+      0.882269781300D-01      0.885822230515D-01      0.886760730239D-01      0.892853693766D-01      0.895480691187D-01
+
+      0.901910949400D-01      0.909750829475D-01      0.910967517193D-01      0.924838297125D-01      0.925731252278D-01
+
+      0.926530372226D-01      0.930398687315D-01      0.933706886405D-01      0.952314968552D-01      0.952884952689D-01
+
+      0.954453703501D-01      0.954985225552D-01      0.960131887373D-01      0.963271186686D-01      0.971399406219D-01
+
+      0.975201126435D-01      0.981896246798D-01      0.985250564094D-01      0.987173243693D-01      0.989262681710D-01
+
+      0.996628698222D-01      0.999505506573D-01      0.999780435455D-01      0.100165784743D+00      0.100517118213D+00
+
+      0.100916159591D+00      0.101127888839D+00      0.102139126508D+00      0.102477461294D+00      0.102610454238D+00
+
+      0.102785529013D+00      0.103657837794D+00      0.103858194748D+00      0.104224380152D+00      0.104365660870D+00
+
+      0.105234715649D+00      0.105356718223D+00      0.105921332387D+00      0.106550246153D+00      0.106755619430D+00
+
+      0.106821187969D+00      0.106915766564D+00      0.106987293736D+00      0.107473812120D+00      0.107919699576D+00
+
+      0.108350765943D+00      0.108478072262D+00      0.108493994280D+00      0.109148676640D+00      0.109418096762D+00
+
+
+
+     Lowest 100 eigenvalues in wavenumbers:
+
+      0.442674568118D+04      0.694732854419D+04      0.760433748196D+04      0.920618960701D+04      0.942455409718D+04
+
+      0.997945770014D+04      0.106874887329D+05      0.114344607207D+05      0.117146075233D+05      0.121958812697D+05
+
+      0.122963747625D+05      0.129125893322D+05      0.134366935004D+05      0.135474345705D+05      0.136765692356D+05
+
+      0.140828767380D+05      0.143994143676D+05      0.144238939516D+05      0.150198248621D+05      0.150714809983D+05
+
+      0.153138601459D+05      0.153802537204D+05      0.157470290316D+05      0.160962273011D+05      0.162501992732D+05
+
+      0.165115775543D+05      0.165704957857D+05      0.167623744857D+05      0.169131350235D+05      0.169766964371D+05
+
+      0.170324444908D+05      0.171331780855D+05      0.177202837443D+05      0.177455473078D+05      0.178507529380D+05
+
+      0.178911162304D+05      0.180485146827D+05      0.183999104681D+05      0.184123599107D+05      0.184807871412D+05
+
+      0.186678358132D+05      0.186934418119D+05      0.189263070426D+05      0.191000100542D+05      0.193275584349D+05
+
+      0.193635828517D+05      0.194415500973D+05      0.194621477847D+05      0.195958728726D+05      0.196535287997D+05
+
+      0.197946566501D+05      0.199667221233D+05      0.199934253312D+05      0.202978537522D+05      0.203174518519D+05
+
+      0.203349905069D+05      0.204198902069D+05      0.204924967820D+05      0.209008969653D+05      0.209134066707D+05
+
+      0.209478367701D+05      0.209595023304D+05      0.210724584972D+05      0.211413581508D+05      0.213197519434D+05
+
+      0.214031900549D+05      0.215501309573D+05      0.216237497100D+05      0.216659476482D+05      0.217118055106D+05
+
+      0.218734708810D+05      0.219366095241D+05      0.219426435154D+05      0.219838479442D+05      0.220609567254D+05
+
+      0.221485361817D+05      0.221950053788D+05      0.224169463859D+05      0.224912022861D+05      0.225203908623D+05
+
+      0.225588153328D+05      0.227502649744D+05      0.227942382417D+05      0.228746066454D+05      0.229056141779D+05
+
+      0.230963496487D+05      0.231231261179D+05      0.232470445992D+05      0.233850752114D+05      0.234301494342D+05
+
+      0.234445400648D+05      0.234652976664D+05      0.234809960656D+05      0.235877745048D+05      0.236856354867D+05
+
+      0.237802436154D+05      0.238081841219D+05      0.238116786008D+05      0.239553647658D+05      0.240144956455D+05
+
+
+
+ Time at end of diagonalising 3d is.........
+
+       322 secs CPU time used
+
+
+
+ Time at start of wavefunction generation is.........
+
+       322 secs CPU time used
+
+
+
+ Time at end of wavefunction generation is.........
+
+       328 secs CPU time used
+
+
+       328 secs CPU time used
+

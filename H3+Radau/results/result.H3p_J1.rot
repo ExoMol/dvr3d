@@ -1,0 +1,203 @@
+     Program ROTLEV3Z (version of May 2002)
+ Npnt set too small...
+ resizing it to           40
+
+     J =  1 rotational state
+     Calculate ODD K block
+
+          Hamiltonian matrix has structure: positive K->q=1
+                                          : negative K->q=0
+ Stream A assigned to unit           26
+ Stream B assigned to unit           27
+ Number of k-blocks from stream A ...           1
+ Number of k-blocks from stream B ...           1
+ Total number of k-blocks ........           2
+
+     Rotational part of rot-vib calculation  with:
+      100   lowest vibrational eigenvectors supplied from stream 26
+      100   lowest vibrational eigenvectors supplied from stream 27
+    16240   dimension even vibration secular problem,
+    15120   dimension odd vibration secular problem, with
+       40   angular dvr points,
+      100   lowest vibrational eigenvectors actually used
+       40   point gauss-associated legendre integration
+       10   lowest rotational eigenvectors required for
+        0   dimension rotation secular problem
+
+     title:  j=1 even e&f                                                           
+
+     Diagonalisation performed in core using lapack routine dsyev
+     Printing of eigenvectors not requested
+     PRINTING OF TRANSFORMED VECTORS REQUESTED
+
+     Hamiltonian scratch file to be held on stream iscr  =   1
+     Eigenvalues    to be written to end of stream ilev  =  14
+     Eigenvalues & vectors to be written to stream jvec  =   3
+     Transformed vectors   to be written to stream kvec  =   8
+ proceed building the off-diag k-blocks...
+ energy analysis ....
+ Notation :   k:qs 
+(  1:10): min   0.442674582237D+04 max   0.240144964115D+05
+(  1:01): min   0.694871520216D+04 max   0.258480667553D+05
+ Selecting ALL 3d functions....
+
+       200 Functions selected from E =    0.4426745822D+04 to    0.2584806676D+05 cm-1 
+
+
+      basis functions selected
+     (  1:10):  100/  100 *SATURATED****
+     (  1:01):  100/  100 *SATURATED****
+
+     Hamiltonian size =   200
+ Off-diag k-blocks.....
+ Verbose simulation building of the ham
+ Searching for non-zero k-overlaps
+ Notation :   k:qs 
+           1           1           0           0
+           3
+           1
+           2
+           2
+(  1:10) <-> (  1:10),   type ... diag. Size:  100 x   100
+(  1:10) <-> (  1:10),   type ...  xdg. Size:  100 x   100
+(  1:01) <-> (  1:01),   type ... diag. Size:  100 x   100
+(  1:01) <-> (  1:01),   type ...  xdg. Size:  100 x   100
+(  1:10) <-> (  1:01),   type ...  cor. Size:  100 x   100
+(  1:10) <-> (  1:01),   type ... xrot. Size:  100 x   100
+ proceed building the off-diag k-blocks...
+ calculating 
+(  1:10) <-> (  1:10),   type ...  xdg. Size:  100 x   100
+
+
+      40 point gauss-associated legendre integration with ALF =  -0.29289
+
+     integration points           weights
+      0.998842445886899       0.218552745410D-01
+      0.992111571234968       0.329578872640D-01
+      0.979330176809199       0.402555146469D-01
+      0.960573307989253       0.459513399422D-01
+      0.935955116044191       0.506877724344D-01
+      0.905625753751230       0.547529946944D-01
+      0.869770269472922       0.583037414245D-01
+      0.828607445109873       0.614353466766D-01
+      0.782388452700699       0.642101991513D-01
+      0.731395319047800       0.666712685075D-01
+      0.675939203746759       0.688492666061D-01
+      0.616358500037713       0.707667496573D-01
+      0.553016769712578       0.724406131236D-01
+      0.486300524547429       0.738836813735D-01
+      0.416616867743407       0.751057578524D-01
+      0.344391009743706       0.761143380273D-01
+      0.270063673573481       0.769151024050D-01
+      0.194088405529349       0.775122602493D-01
+      0.116928807625491       0.779087876692D-01
+      0.039055708682194       0.781065874309D-01
+ <a|a> terminated!!
+ calculating 
+(  1:01) <-> (  1:01),   type ...  xdg. Size:  100 x   100
+
+
+      40 point gauss-associated legendre integration with ALF =  -0.29289
+
+     integration points           weights
+      0.998842445886899       0.218552745410D-01
+      0.992111571234968       0.329578872640D-01
+      0.979330176809199       0.402555146469D-01
+      0.960573307989253       0.459513399422D-01
+      0.935955116044191       0.506877724344D-01
+      0.905625753751230       0.547529946944D-01
+      0.869770269472922       0.583037414245D-01
+      0.828607445109873       0.614353466766D-01
+      0.782388452700699       0.642101991513D-01
+      0.731395319047800       0.666712685075D-01
+      0.675939203746759       0.688492666061D-01
+      0.616358500037713       0.707667496573D-01
+      0.553016769712578       0.724406131236D-01
+      0.486300524547429       0.738836813735D-01
+      0.416616867743407       0.751057578524D-01
+      0.344391009743706       0.761143380273D-01
+      0.270063673573481       0.769151024050D-01
+      0.194088405529349       0.775122602493D-01
+      0.116928807625491       0.779087876692D-01
+      0.039055708682194       0.781065874309D-01
+ <b|b> terminated!!
+ calculating 
+(  1:10) <-> (  1:01),   type ...  cor. Size:  100 x   100
+           2           1
+
+
+      40 point gauss-associated legendre integration with ALF =   0.20711
+
+     integration points           weights
+      0.997772477234625       0.165727660603D-02
+      0.989725043797291       0.491588203661D-02
+      0.975787874805103       0.898217463329D-02
+      0.956042089662925       0.136045766552D-01
+      0.930604986900993       0.186204206296D-01
+      0.899627933688560       0.239012177920D-01
+      0.863295318244570       0.293358054461D-01
+      0.821823423541694       0.348235762293D-01
+      0.775459131919648       0.402714745119D-01
+      0.724478452708471       0.455926797143D-01
+      0.669184878063768       0.507061326476D-01
+      0.609907575779565       0.555365106167D-01
+      0.546999429491708       0.600144464495D-01
+      0.480834937806582       0.640768755237D-01
+      0.411807984806147       0.676674403287D-01
+      0.340329495176283       0.707369070953D-01
+      0.266824987905322       0.732435637098D-01
+      0.191732043109452       0.751535773219D-01
+      0.115497697061773       0.764412962141D-01
+      0.038575780930705       0.770894849119D-01
+ Number off-diag blocks calculated ...           3
+
+     hamiltonian construction complete
+ Diagonal elements.....
+ off-diag elements ........
+ loading offdiag block ....           1           1           1
+ loading offdiag block ....           2           2           2
+ loading offdiag block ....           3           2           1
+ Job type: evalues & evectors
+ Evalues converged ....           10  /           10
+
+
+     lowest  10 eigenvalues in hartrees
+
+      0.201679301392D-01      0.314850410428D-01      0.317972339069D-01      0.346460177799D-01      0.419368699008D-01
+
+      0.426318477985D-01      0.432262574029D-01      0.453219861503D-01      0.455975615525D-01      0.486937132360D-01
+
+
+
+     lowest  10 eigenvalues in wavenumbers relative to ezero =  0.000000000000D+00
+
+      0.442634267244D+04      0.691015784711D+04      0.697867616240D+04      0.760391105436D+04      0.920406583667D+04
+
+      0.935659563539D+04      0.948705327673D+04      0.994701191010D+04      0.100074936330D+05      0.106870194060D+05
+
+ For simplicity of use evalues printed also in stream           62
+ This is the final version for dstore: pb, 29/06/06.
+ hovewer, needs extensive checking....
+
+     eigenvector transformation:
+     input:   dvr3d data (stream A), ivec = 26
+     input:   dvr3d data (stream B), ivec1 = 27
+              rotlev3b data (internal stream), jvec =  3
+     output:  transformed vectors (DVR), kvecpb =  9
+     output:  transformed vectors (FBR), kvec =  8
+
+
+     J =  1 KMIN = 1  PARITY = 1 NVAL = 10
+
+ Running over odd k values
+ wfs to be plotted not requested.....
+ allocating legendre points and weights, size=           40
+
+
+     transformation completed successfully
+
+     for rotational state: jrot =  1.  stored    10 vib-rot levels
+     nend =  31360
+ Successful end in routine dgrot
+
+     diagonalisation complete
