@@ -1,5 +1,7 @@
-DVR3D: a program suite for the calculation of rotation-vibration
-spectra of triatomic molecules
+DVR3D
+=====
+
+A program suite for the calculation of rotation-vibration spectra of triatomic molecules
 
 Jonathan Tennyson, Maxim A Kostin, Paolo Barletta, Gregory J Harris,
 Oleg L Polyansky, Jayesh Ramanlal and Nikolai F Zobov
