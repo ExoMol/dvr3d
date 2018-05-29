@@ -21,17 +21,16 @@
 !     comments on namelist parameters (& defaults) in block data
 !     the program needs the following subroutines:
 !     1. limited card input which is read in subroutine insize
-!        and an input file on stream ivec (& ivec2) from triatomf
+!        and an input file on stream ivec (& ivec2) from triatom
 !     2. f02fjf to do iterative diagonalisation (nag routine).
 !     or dsyev to do in core diagonalisation (lapack f90 routine).
 !     the program works in **** atomic units ***** :
-!     Fortan90 version with dynamic arrays by Max Kostin & Jonathan
-!     Tennyson
+!     Fortan90 version with dynamic arrays by Max Kostin & Jonathan Tennyson
 
       implicit double precision (a-h,o-y), logical (z)
 
       common /size/ nbass,mbass,ibass,neval,ipar,nmax,maxblk,jrot,&
-                    kmin,kmax,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,&
+                    kmin,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,&
                     nblk,loff,loff0,mbass0
       common /outp/ toler,thresh,zpham,zpvec,zvec,ztran,zptra,&
                     zpfun,ilev,ivec,ivec2,jvec,jvec2,kvec,kvec2,&
@@ -39,28 +38,17 @@
       namelist/prt/ toler,thresh,zpham,zpvec,zvec,ztran,zptra,&
                     zpfun,ilev,ivec,ivec2,jvec,jvec2,kvec,kvec2,&
                     zdiag,zdcore,iscr,ires,irf1,irf2
-      common/timing/itime0
-
-     INTEGER :: count_0, count_rate, count_max, walltime , tstart, tend
       
       write(6,1000)
  1000 format('1',4x,'Program ROTLEV3B (version of March 2002):'/)
 !     read in namelist input data (defaults in block data)
       read(5,prt)
 
-      call nftim('beginning')
-      
-      call SYSTEM_CLOCK(itime0,irate2,imax2)
 !     read in control parameters of problem.
       call insize
 
 !     first for select, then onto main program
       call select 
-
-      call SYSTEM_CLOCK(itime0,irate2,imax2)
-      itime=(itime2-itime0)/irate2
-      write(6,1)itime
- 1    format(/i10,' secs CPU time used'/)
 
       stop
       end
@@ -80,8 +68,7 @@
 !     zdcore: = .true. for in core diagonalisation
 !     zdiag:  = .false. do not diagonalise the Hamiltonian matrix.
 !     ztran:  = .true. transform eigenvectors back to original basis.
-!     zvec:   = .true. eigenvalues and eigenvectors written to disk
-!     file.
+!     zvec:   = .true. eigenvalues and eigenvectors written to disk file.
 !     zpfun:  = .true.  eigenvalues concatenated on stream ILEV.
 !     stream         holds                              used if
 !      ilev    input/output of eigenvalues              zpfun=.true.
@@ -98,8 +85,7 @@
 !     ires = 0  normal run
 !          = 1  restart from first  call to dgrot
 !          = 2  restart from second call to dgrot
-!          = 3  restart from first  call to dgrot, one diagonalisation
-!          only
+!          = 3  restart from first  call to dgrot, one diagonalisation only
 !          = -1 perform both transformations
 !          = -2 perform second transformation only
 !          = -3 perform first  transformation only
@@ -126,12 +112,10 @@
 !     nbass: maximum dimension of rotational secular problem
 !     ibass: actual dimension of rotational secular problem
 !     mbass: maximum size of vibrational problem (excluding linear geom)
-!     mbass0: maximum size of vibrational problem (including linear
-!     geom)
+!     mbass0: maximum size of vibrational problem (including linear geom)
 !     maxblk: size of vibrational radial problem (even basis)
 !     mxblk2: size of vibrational radial problem (odd  basis)
-!     ndvr : maximum dimension of theta dvr grid used in vibrational
-!     problem
+!     ndvr : maximum dimension of theta dvr grid used in vibrational problem
 !     iang : maximum number of discrete angles retained in vib. problem
 !     npnt : number of gauss-associated legendre grid points requested
 !     jrot : total rotational angular momentum
@@ -150,7 +134,7 @@
 !     loff0: space required for the largest off-diagonal block
 
       common /size/ nbass,mbass,ibass,neval,ipar,nmax,maxblk,jrot,&
-                    kmin,kmax,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,&
+                    kmin,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,&
                     nblk,loff,loff0,mbass0
       common /outp/ toler,thresh,zpham,zpvec,zvec,ztran,zptra,&
                     zpfun,ilev,ivec,ivec2,jvec,jvec2,kvec,kvec2,&
@@ -316,7 +300,7 @@
       implicit double precision (a-h,o-y), logical (z)
  
       common /size/ nbass,mbass,ibass,neval,ipar,nmax,maxblk,jrot,&
-                    kmin,kmax,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,&
+                    kmin,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,&
                     nblk,loff,loff0,mbass0
       common /outp/ toler,thresh,zpham,zpvec,zvec,ztran,zptra,&
                     zpfun,ilev,ivec,ivec2,jvec,jvec2,kvec,kvec2,&
@@ -486,15 +470,12 @@
       ipu=ipd+mvib(ioff)
       write(6,1020) kz,ipd+1,ipu,symm(mod(ipar+kz,2)+1)
  1020 format(5x,'k =',i3,', i runs from',i5,' to',i5,2x,a4)
-      if(ipu.EQ.nbass) exit
   310 continue
-
-      nblk = kz + 1
 
       nvib=ivib
       if (zdcore) then
          keval=nbass
-         lwork=max(loff0,3*nbass)
+         lwork=max(loff0,3*nbass-1)
       else
          keval=min(max(neval,neval2)+4,nbass)
          lwork=3*keval+max(keval*keval,nbass+nbass)
@@ -522,7 +503,7 @@
       implicit double precision (a-h,o-y), logical (z)
 
       common /size/ nbass,mbass,ibass,neval,ipar,nmax,maxblk,jrot,&
-                    kmin,kmax,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,&
+                    kmin,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,&
                     nblk,loff,loff0,mbass0
       common /outp/ toler,thresh,zpham,zpvec,zvec,ztran,zptra,&
                     zpfun,ilev,ivec,ivec2,jvec,jvec2,kvec,kvec2,&
@@ -531,7 +512,7 @@
       DIMENSION MVIB(NBLK),nkbas(NBLK), lmin(NBLK),lbasis(NBLK)
       DOUBLE PRECISION, ALLOCATABLE, DIMENSION(:) :: DIAG,eval
       DOUBLE PRECISION, ALLOCATABLE, DIMENSION(:,:) :: vec
-      DOUBLE PRECISION, ALLOCATABLE, DIMENSION(:) ::radmee,radmoo,radmeo,radmoe
+      DOUBLE PRECISION, ALLOCATABLE, DIMENSION(:) :: radmee,radmoo,radmeo,radmoe
       data x0/0.0d0/
 
       if (abs(ires) .eq. 2) goto 100
@@ -552,7 +533,6 @@
          write(6,1050)
  1050    format(/5x,'hamiltonian construction complete')
 !         call timer
-	  call nftim('end of hamiltonian construction')
           DEALLOCATE(radmee,radmoo,radmeo,radmoe)
       endif
  
@@ -568,7 +548,7 @@
          ibass=nbass
          if (zdcore) then
             keval=nbass
-            lwork=max(loff0,3*nbass)
+            lwork=max(loff0,2*nbass)
             allocate(vec(nbass,nbass),diag(lwork),eval(keval))
           else
             keval=min(ibass,neval+4)
@@ -595,15 +575,12 @@
          write(6,1060)
  1060    format(/5x,'diagonalisation complete')
 !         call timer
-	  call nftim('end of diagonalisation')
       endif
  
 !     transform the eigenvectors if requested
       if  (ztran .or. zdcore) deallocate(vec,diag)  
-   50 if (ztran) then 
-          call dstore(mvib,1,nkbas,lmin,lbasis,eval,idvr)
-          call nftim('end of transformation')
-      endif
+   50 if (ztran) call dstore(mvib,1,nkbas,lmin,lbasis,eval,idvr)
+ 
       if (kmin.le.1 .or. abs(ires).eq.3) goto 200
  
 !     diagonalise/transform a second time if kmin > 1
@@ -638,7 +615,7 @@
 !        (for a restart run, first position the file)
          if (ires.eq.2 .or. ztran .or. zdcore) then
             if (zdcore) then
-               lwork=max(loff0,3*nbass)
+               lwork=max(loff0,2*nbass)
                allocate(vec(nbass,nbass),diag(lwork))
             else
                allocate(vec(nbass,keval),diag(nbass+loff))
@@ -649,18 +626,14 @@
          call dgrot(diag,mvib(2),eval,vec,2,ezero,lwork)
 
          write(6,1060)
-!        call timer
-	  call nftim('transformation')
+!         call timer
       else
          nblk=nblk-1
       endif
       deallocate(diag,vec)
         
 !     transform the eigenvectors if requested
-      if (ztran) then 
-             call dstore(mvib(2),2,nkbas(2),lmin(2),lbasis(2),eval,idvr)
-             call nftim('end of transformation')
-      endif
+      if (ztran) call dstore(mvib(2),2,nkbas(2),lmin(2),lbasis(2),eval,idvr)
 200   deallocate(eval)
       return
       end
@@ -675,7 +648,7 @@
       implicit double precision (a-h,o-y), logical (z)
  
       common /size/ nbass,mbass,ibass,neval,ipar,nmax,maxblk,jrot,&
-                    kmin,kmax,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,&
+                    kmin,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,&
                     nblk,loff,loff0,mbass0
       common /outp/ toler,thresh,zpham,zpvec,zvec,ztran,zptra,&
                     zpfun,ilev,ivec,ivec2,jvec,jvec2,kvec,kvec2,&
@@ -733,7 +706,7 @@
       implicit double precision (a-h,o-y), logical (z)
  
       common /size/ nbass,mbass,ibass,neval,ipar,nmax,maxblk,jrot,&
-                   kmin,kmax,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,&
+                   kmin,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,&
                    nblk,loff,loff0,mbass0
 
       DIMENSION iv1(ndvr),iv2(ndvr)
@@ -752,11 +725,8 @@
       do 10 i=1,k1
       tswalf=tswalf*dble(i)/dble(k1+i+1)
    10 continue
-!	write(*,*) tswalf
-	call jacobi(npnt,npnt2,xalf,walf,realk,realk,cswalf,tswalf)
-!	call gasleg(npnt,npnt2,xalf,walf,realk,realk,plega,plegb,&
-!                  cswalf,tswalf)
-!	write(*,*) twsalf
+      call gasleg(npnt,npnt2,xalf,walf,realk,realk,plega,plegb,&
+                  cswalf,tswalf)
       write(6,1000) npnt,k1,(xalf(i),walf(i),i=1,npnt2)
  1000 format(//i8,' point gauss-associated legendre integration with ',&
              'k =' ,i3//5x,'integration points',11x,'weights',&
@@ -834,7 +804,7 @@
       implicit double precision (a-h,o-y), logical (z)
  
       common /size/ nbass,mbass,ibass,neval,ipar,nmax,maxblk,jrot,&
-                    kmin,kmax,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,&
+                    kmin,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,&
                     nblk,loff,loff0,mbass0
 
       DIMENSION iv1(ndvr),iv2(ndvr)
@@ -904,7 +874,6 @@
       c(i)= x4*(xi-x1)*(alf+xi-x1)*(bta+xi-x1)*(alf+bta+xi-x1)/&
              ((alf+bta+x2*xi-x1)*(alf+bta+x2*xi-x2)*&
               (alf+bta+x2*xi-x2)*(alf+bta+x2*xi-x3))
-     ! write(*,*) tsa
 21    continue
       cc=tsa
       do 1 i=2,nn
@@ -939,84 +908,12 @@
  
       call root(xt,nn,alf,bta,dpn,pn1,b,c,eps)
       x(i)= xt
-      !write(*,*) x(i), dpn, pn1, cc
       a(i)= cc/(dpn*pn1)
       csa= csa + a(i)*x2
   12  continue
       if (2*nn2 .ne. nn) csa = csa - a(nn2)
       return
       end
-
-
-!############################################################################
-      subroutine jacobi(nn,nn2,x,a,alf,bta,csa,tsa)
-
-!     calculates zeros x(i) of the nn'th order jacobi polynomial
-!     pn(alf,bta) for the segment (-1,1) & and corresponding weights
-!     for gauss-jacobi integration. this routine uses a brute force
-!     search for zeros due to GJ Harris (2001).
-!     note that for our purposes, alf= bta= nu.
-
-
-      implicit real*8(a-h,o-z)
-      real*8, dimension(nn) :: x,a,b,c,xt
-      data x0/0.0d0/,x1/1.0d0/,x2/2.0d0/,x3/3.0d0/,x4/4.0d0/,& 
-           eps/1.0d-12/,xstep/1.0d-6/
-      fn= dble(nn)
-      csa= x0
-      c(1) = x0
-      b(1) = x0
-      do 10 i=2,nn
-      xi= float(i)
-      b(i) = x0
-      c(i)= x4*(xi-x1)*(alf+xi-x1)*(bta+xi-x1)*(alf+bta+xi-x1)/& 
-             ((alf+bta+x2*xi-x1)*(alf+bta+x2*xi-x2)*& 
-              (alf+bta+x2*xi-x2)*(alf+bta+x2*xi-x3))
-      !write(*,*) tsa
-  10 continue
-      cc=tsa
-      do 15 i=2,nn
-       cc= cc*c(i)
-   15 continue
-
-! step through the jacobi polynomial and 
-! notes a first guess for the posititions of the zeros in the 
-! array xt(ii). Zeros are found by looking for a change in sign.
-
-      ii=0
-      pm1=x1
-      xxx=x1
- 30   continue
-      call recur(p,dp,pn1,xxx,nn,alf,bta,b,c)
-
-      if (pm1*p .lt. x0) then
-         pm1 = -pm1
-         ii = ii +1
-         xt(ii)=xxx-0.5*xstep
-      endif
-
-      if (ii .eq. nn2) then
-         do 40 i=1,nn2
-         call recur(ptemp,dp,pn1,xt(i),nn,alf,bta,b,c)
-40      continue
-      else
-         xxx=xxx-xstep
-         if (xxx .gt. -1.5*xstep) goto 30
-         write(6,*) "Incorrect number",ii-1," of zeros found in JACOBI"
-         stop
-      endif 
-
-       do 20 i=1,nn2
-       call root(xt(i),nn,alf,bta,dpn,pn1,b,c,eps)
-       x(i)= xt(i)
-!       write(*,*) x(i), dpn, pn1, cc     
-       a(i)= cc/(dpn*pn1)
-       csa= csa + a(i) + a(i)
-  20  continue
-      if (2*nn2 .ne. nn) csa=csa-a(nn2)
-      return
-      end
-
 !**********************************************************************c
 !                                                **020
       subroutine root(x,nn,alf,bta,dpn,pn1,b,c,eps)
@@ -1058,10 +955,8 @@
       pn= p
       dpn= dp
       pn1= p1
-      !write(*,*) dpn, pn1
       return
       end
-
       subroutine asleg(pleg,pnorm,lmax,x,nn2,m)
  
 !     calculate polynomials 1 to lmax at x = cos(theta) for m = 0 or 1,
@@ -1074,58 +969,28 @@
       implicit double precision (a-h,o-z)
       dimension pleg(0:lmax,nn2),x(nn2),pnorm(0:lmax)
       data x1/1.0d0/,x2/2.0d0/
-
-
-write(*,*) lmax
-
       if (m .lt. 0) goto 999
       do 10 i=1,nn2
-
-      !For high J and high k the value pmm can become too large over this loop
-      !Therefore in these instances we need pmm to be very small to begin with
-      !We later divide by this factor to achieve the originally required number
-      !For so2 at J = 200 and k > 90 we find this necessary, so we add this conditional
-	if(m.LT.90)then
-	  pmm = x1
-	else
-	  pmm = 1d-250
-	end if
-     ! pmm = x1
-
+      pmm = x1
       fact = x1
       do 11 j=1,m
       pmm = -pmm * fact
       fact = fact + x2
    11 continue
-
-      !Even when we use the above trick to reduce the size of pmm, it can still be too large for subsequent loops
-      !We therefore conditionally divide pmm by a large enough factor - we take this to be for k > 150 (for so2)
-      !write(*,*) pmm
-      if(m.GT.150)then
-	pmm = pmm/1.0d200
-      end if
  
       pleg(0,i) = pmm
       pmmp1= x(i)*(m+m+1)*pmm
       pleg(1,i)= pmmp1
-
-
-
       ll=1
       do 2 l= 2+m,lmax+m
       r2lm1 = dble(l+l-1)
       rlpmm1= dble(l+m-1)
       rlmm  = dble(l-m)
       pll= (x(i)*r2lm1*pmmp1 - rlpmm1*pmm)/rlmm
-
-
-
       pmm= pmmp1
       pmmp1= pll
       ll=ll+1
       pleg(ll,i)= pll
-
-      !write(*,*) pleg(ll,i)
 2     continue
 10    continue
  
@@ -1135,61 +1000,23 @@ write(*,*) lmax
       do 13 j = m,lmax+m
       fact = x1
       do 12 i = j-m+1,j+m
-
-
-	 
-	 !After a certain point, square-rooting this factor doesn't reduce the number sufficiently to a coping level
-	 !Therefore we take the fourth root instead. We set the cut-off point to be the same as that for pmm, k > 90
-	 if(m.LT.90)then
-	   facti = sqrt(dble(i))
-	 else
-	   facti = dble(i)**(1.0d0/4.0d0)
-	 end if
-!      facti = dble(i)
+      facti = dble(i)
       fact = fact * facti
-
-      !write(*,*) i, m, fact
-
    12 continue
-      rj = dble(j)
       jj = jj + 1
-
-      if(m.LT.90)then
-	   pnorm(jj) = sqrt((rj + rj + x1) /2)/fact
-	 else
-	   pnorm(jj) = (((rj + rj + x1) /2)**(1.0d0/4.0d0))/fact
-      end if
-!      pnorm(jj) = sqrt(dble(j+j+1) / (fact + fact))
-
+      pnorm(jj) = sqrt(dble(j+j+1) / (fact + fact))
    13 continue
 !     now normalise the polynomials
-      do 14 i=1,nn2
-
-	do 15 jj=0,lmax
-	  pleg(jj,i) = pleg(jj,i) * pnorm(jj)
-	   !This is where we multiply by the large factor initially divided from pmm at the beginning of its loop
-	    if(m.GE.90)then
-	      pleg(jj,i) = pleg(jj,i) * 1.0d250 * pnorm(jj)
-	    end if
-	    
-	    !And for the k's which are greater than 150, we need to divide by the reducing factor again
-	     if(m.GT.150)then
-	      pleg(jj,i) = pleg(jj,i) * 1.0d200
-	    end if
-	
-	15 continue
-   
-      14 continue
-      
-  return
-
-
+      do 14 jj=0,lmax
+      do 15 i=1,nn2
+      pleg(jj,i) = pleg(jj,i) * pnorm(jj)
+   15 continue
+   14 continue
+      return
 999   write(6,200)
 200   format(//5x,'improper argument in subroutine asleg'/)
       stop
       end
-
-
       subroutine wrtho(diag,offdg,mvib,nbass,nblk)
 !     print hamiltonian matrix                                      #009
       implicit double precision (a-h,o-y)
@@ -1227,144 +1054,6 @@ write(*,*) lmax
       return
       end
 
-
-
-!       subroutine asleg(pleg,pnorm,lmax,x,nn2,m)
-!  
-! !     calculate polynomials 1 to lmax at x = cos(theta) for m = 0 or 1,
-! !     using the routine of press et al, numerical recipes, p. 182,
-! !     for the polynomial part of associated legendre functions.
-! !     a factor of sin(theta)**m has been removed from all functions;
-! !     this enables us to use jacobi integration with alf = bta = m,
-! !     using routines refived from beidenharn and louck.
-!  
-!       implicit double precision (a-h,o-z)
-!       dimension pleg(0:lmax,nn2),x(nn2),pnorm(0:lmax)
-!       data x1/1.0d0/,x2/2.0d0/
-!       if (m .lt. 0) goto 999
-!       do 10 i=1,nn2
-!       
-!       !For high J and high k the value pmm can become too large over this loop
-!       !Therefore in these instances we need pmm to be very small to begin with
-!       !We later divide by this factor to achieve the originally required number
-!       !For so2 at J = 200 and k > 90 we find this necessary, so we add this conditional
-! 	if(m.LT.90)then
-! 	  pmm = x1
-! 	else
-! 	  pmm = 1d-250
-! 	end if
-! 
-!       fact = x1
-!       do 11 j=1,m
-!       pmm = -pmm * fact
-!       fact = fact + x2
-!    11 continue
-!  
-!       !Even when we use the above trick to reduce the size of pmm, it can still be too large for subsequent loops
-!       !We therefore conditionally divide pmm by a large enough factor - we take this to be for k > 150 (for so2)
-!       !write(*,*) pmm
-!       if(m.GT.150)then
-! 	pmm = pmm/1.0d200
-!       end if
-! 
-!       pleg(0,i) = pmm
-!       pmmp1= x(i)*(m+m+1)*pmm
-!       pleg(1,i)= pmmp1
-!       ll=1
-!       do 2 l= 2+m,lmax+m
-!       r2lm1 = dble(l+l-1)
-!       rlpmm1= dble(l+m-1)
-!       rlmm  = dble(l-m)
-!       pll= (x(i)*r2lm1*pmmp1 - rlpmm1*pmm)/rlmm
-!       pmm= pmmp1
-!       pmmp1= pll
-!       ll=ll+1
-!       pleg(ll,i)= pll
-! 2     continue
-! 10    continue
-!  
-! !     set up the normalisation constants
-! !     (pnorm)**2 = (2j + 1)/2   *   (j - k)! / (j + k)!
-!       jj = -1
-!       do 13 j = m,lmax+m
-!       fact = x1
-!       do 12 i = j-m+1,j+m
-! 	 !After a certain point, square-rooting this factor doesn't reduce the number sufficiently to a coping level
-! 	 !Therefore we take the fourth root instead. We set the cut-off point to be the same as that for pmm, k > 90
-! 	 if(m.LT.90)then
-! 	   facti = sqrt(dble(i))
-! 	 else
-! 	   facti = dble(i)**(1.0d0/4.0d0)
-! 	 end if
-! 
-!       fact = fact * facti
-!    12 continue
-!       rj = dble(j)
-!       jj = jj + 1
-!       
-!       if(m.LT.90)then
-! 	   pnorm(jj) = sqrt((rj + rj + x1) /2)/fact
-! 	 else
-! 	   pnorm(jj) = (((rj + rj + x1) /2)**(1.0d0/4.0d0))/fact
-!       end if
-!    13 continue
-! !     now normalise the polynomials
-!       do 14 jj=0,lmax
-!       do 15 i=1,nn2
-!       pleg(jj,i) = pleg(jj,i) * pnorm(jj)
-!       !This is where we multiply by the large factor initially divided from pmm at the beginning of its loop
-! 	    if(kz.GE.90)then
-! 	      pleg(jj,i) = pleg(jj,i) * 1.0d250 * pnorm(jj)
-! 	    end if
-! 	    
-! 	    !And for the k's which are greater than 150, we need to divide by the reducing factor again
-! 	     if(kz.GT.150)then
-! 	      pleg(jj,i) = pleg(jj,i) * 1.0d200
-! 	    end if
-!    15 continue
-!    14 continue
-!       return
-! 999   write(6,200)
-! 200   format(//5x,'improper argument in subroutine asleg'/)
-!       stop
-!       end
-!       subroutine wrtho(diag,offdg,mvib,nbass,nblk)
-! !     print hamiltonian matrix                                      #009
-!       implicit double precision (a-h,o-y)
-!       dimension diag(nbass),offdg(*),mvib(nblk)
-!       write(6,1010) diag
-!  1010 format('1',5x,'hamiltonian matrix: diagonal elements',&
-!              /(10f13.8))
-!  
-!       ioff1=1
-!       ioff2=mvib(1)*mvib(2)
-!       num=1
-!       write(6,1030) num,(offdg(i),i=ioff1,ioff2)
-!  1030 format(//5x,'off-diagonal block number',i3/(10f13.8))
-!       do 10 k=3,nblk
-!       ioff1=ioff2+1
-!       ioff2=ioff2+mvib(k-2)*mvib(k)
-!       num=num+1
-!       write(6,1030) num,(offdg(i),i=ioff1,ioff2)
-!       ioff1=ioff2+1
-!       ioff2=ioff2+mvib(k-1)*mvib(k)
-!       num=num+1
-!       write(6,1030) num,(offdg(i),i=ioff1,ioff2)
-!    10 continue
-!       return
-!       end
-!       subroutine wrthi(hamil,nham)
-! !     print hamiltonian matrix in core version
-!       double precision hamil(nham,nham)
-!       write(6,1010)
-!  1010 format(5x,'hamiltonian matrix'/)
-!       do 30 i=1,nham
-!       write(6,1020) (hamil(i,j),j=1,i)
-!  1020 format(10f13.7)
-!    30 continue
-!       return
-!       end
-
 !#######################################################################
       subroutine loadh(diag,mvib,hamil,itime)
  
@@ -1372,7 +1061,7 @@ write(*,*) lmax
  
       implicit double precision (a-h,o-y), logical (z)
       common /size/ nbass,mbass,ibass,neval,ipar,nmax,maxblk,jrot,&
-                    kmin,kmax,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,&
+                    kmin,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,&
                     nblk,loff,loff0,mbass0
       common /outp/ toler,thresh,zpham,zpvec,zvec,ztran,zptra,&
                     zpfun,ilev,ivec,ivec2,jvec,jvec2,kvec,kvec2,&
@@ -1441,8 +1130,8 @@ write(*,*) lmax
          if (mvib(1)*mvib(3) .gt. 0) read(iscr)
          if (mvib(2)*mvib(3) .gt. 0) read(iscr)
          if (nblk .gt. 3) then
-         if (mvib(2)*mvib(4) .gt. 0) read(iscr)
-         end if
+	 if (mvib(2)*mvib(4) .gt. 0) read(iscr)
+	 end if
          j0=4
       else
          j0=2
@@ -1463,7 +1152,7 @@ write(*,*) lmax
  
 !     print hamiltonian matrix- if requested
  
-         if (zpham)& 
+         if (zpham)&
              call wrtho(diag,diag(ibass+1),mvib(itime),ibass,nblk+1-itime)
       else
          do 150 j=j0,nblk
@@ -1518,7 +1207,7 @@ write(*,*) lmax
       implicit double precision (a-h,o-y), logical (z)
  
       common /size/ nbass,mbass,ibass,neval,ipar,nmax,maxblk,jrot,&
-                    kmin,kmax,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,&
+                    kmin,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,&
                     nblk,loff,loff0,mbass0
       common /outp/ toler,thresh,zpham,zpvec,zvec,ztran,zptra,&
                     zpfun,ilev,ivec,ivec2,jvec,jvec2,kvec,kvec2,&
@@ -1793,8 +1482,7 @@ write(*,*) lmax
       return
       end
       subroutine rdcoef(coef,idim,mvib,mev,iv)
-!     read first step vector array coef from unit iv skipping surplus
-!     vectors
+!     read first step vector array coef from unit iv skipping surplus vectors
       implicit double precision (a-h,o-y), logical (z)
       dimension coef(idim,max(mvib,1))
  
@@ -1853,46 +1541,52 @@ write(*,*) lmax
       end
 
 !########################################################################
-       subroutine solofd(mn,radmat,angmat,nmax1,iq,iq1,iq2,offdg,iang11,& 
+      subroutine solofd(mn,radmat,angmat,nmax1,iq,iq1,iq2,offdg,iang11,&
                  iang1,iang2,mvib1,mvib2,coef1,coef2,ibass1,ibass2)
-
+ 
 !     construct off-diagonal matrix elements from radial and angular
 !     matrix elements and first step vectors.
-!     New algorithm introduced. JT June 2012.
-
+ 
       implicit double precision (a-h,o-y), logical (z)
-      common /outp/ toler,thresh,zpham,zpvec,zvec,ztran,zptra,& 
-                    zpfun,ilev,ivec,ivec2,jvec,jvec2,kvec,kvec2,& 
+      common /outp/ toler,thresh,zpham,zpvec,zvec,ztran,zptra,&
+                    zpfun,ilev,ivec,ivec2,jvec,jvec2,kvec,kvec2,&
                     zdiag,zdcore,iscr,ires,irf1,irf2
       common /size/ nbass,mbass,ibass,neval,ipar,nmax,maxblk,jrot,&
-                    kmin,kmax,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,& 
+                    kmin,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,&
                     nblk,loff,loff0,mbass0
 
       DOUBLE PRECISION, DIMENSION(mn) :: offdg
-      DOUBLE PRECISION, DIMENSION(*) :: coef1,coef2
-      DOUBLE PRECISION, DIMENSION(*) :: radmat
+      DOUBLE PRECISION, DIMENSION(*) :: coef1,coef2,radmat
       DOUBLE PRECISION, DIMENSION(iang11,iang11) :: angmat
-      DOUBLE PRECISION, DIMENSION(iang1,mvib2) :: pdg
-      data x0/0.0d0/,x1/1.0d0/
+ 
+      data x0/0.0d0/
+!     zero the off-diagonal block
       offdg = x0
+ 
       ir1=0
       ir2=0
       ir=0
       do 150 i1=1,nmax1
       do 200 i2=1,i1-iq
-      i0=ir1*iang1+1
+      i0=ir1*iang1
       ir1=ir1+1
-      j0=ir2*iang2+1
+      j0=ir2*iang2
       ir2=ir2+1
       ir=ir+1
-!Ala'a Azzam modification 18 sep 2012
-
-      pdg = x0
-      call dgemm('N','N',iang1,mvib2,iang2,radmat(ir),angmat,iang11,&
-                  coef2(j0),ibass2,x1,pdg,iang1)
-
-      call dgemm('T','N',mvib2,mvib1,iang1,x1,pdg,iang1,&
-                 coef1(i0),ibass1,x1,offdg,mvib2)
+      rm=radmat(ir)
+ 
+      do 210 ia1=1,iang1
+      i=i0+ia1
+      do 220 ia2=1,iang2
+      j=j0+ia2
+!     cor is the integral for current basis function
+      cor=rm*angmat(ia1,ia2)
+!     transform to vibrational basis and add to offdg
+ 
+      call dger(mvib2,mvib1,cor,coef2(j),ibass2,coef1(i),ibass1,&
+            offdg,mvib2)
+  220 continue 
+  210 continue
   200 continue
       ir1=ir1+iq1
       ir2=ir2+iq2
@@ -1901,6 +1595,7 @@ write(*,*) lmax
       call outrow(offdg,mn,iscr)
       return
       end
+
 !##########################################################################
       subroutine dgrot(diag,mvib,eval,vec,k1,ezero,lwork)
  
@@ -1910,7 +1605,7 @@ write(*,*) lmax
  
       implicit double precision (a-h,o-y), logical (z)
       common /size/ nbass,mbass,ibass,neval,ipar,nmax,maxblk,jrot,&
-                    kmin,kmax,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,&
+                    kmin,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,&
                     nblk,loff,loff0,mbass0
       common /outp/ toler,thresh,zpham,zpvec,zvec,ztran,zptra,&
                     zpfun,ilev,ivec,ivec2,jvec,jvec2,kvec,kvec2,&
@@ -1930,7 +1625,6 @@ write(*,*) lmax
           if (ifail .ne. 0) write(6,950) ifail
  950     format(/5x,'LAPACK routine SSYEV returned INFO =',i5)  
       else
-	  write(*,*) 'lol'
          LWORK=3*KEVAL+MAX(KEVAL*KEVAL,NBASS+NBASS)
          call dgiter(diag,mvib,eval,vec,lwork)
       endif
@@ -1953,8 +1647,7 @@ write(*,*) lmax
          ip=1-kmin
          if (kmin .gt. 1) ip=k1-1
          write(ilev,1025) jrot,ip,0,0,(2-4*ipar),neval
-!1025    format(6i4)
- 1025    format(5i4,i6) !sergei Yu modification
+ 1025    format(6i4)
          write(ilev,1026) eval
  1026    format(4d20.12)
       endif
@@ -2028,7 +1721,7 @@ write(*,*) lmax
  
       implicit double precision (a-h,o-y), logical (z)
       common /size/ nbass,mbass,ibass,neval,ipar,nmax,maxblk,jrot,&
-                    kmin,kmax,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,&
+                    kmin,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,&
                     nblk,loff,loff0,mbass0
       common /outp/ toler,thresh,zpham,zpvec,zvec,ztran,zptra,&
                     zpfun,ilev,ivec,ivec2,jvec,jvec2,kvec,kvec2,&
@@ -2099,7 +1792,7 @@ write(*,*) lmax
  
       implicit double precision(a-h,o-y), logical(z)
       common /size/ nbass,mbass,ibass,neval,ipar,nmax,maxblk,jrot,&
-                    kmin,kmax,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,&
+                    kmin,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,&
                     nblk,loff,loff0,mbass0
       common /outp/ toler,thresh,zpham,zpvec,zvec,ztran,zptra,&
                     zpfun,ilev,ivec,ivec2,jvec,jvec2,kvec,kvec2,&
@@ -2195,11 +1888,9 @@ write(*,*) lmax
 !     read in the untransformed vectors for current k-block
       call getrow(c,mvib(k)*nval,jvec)
 
-!     the code below here performs a standard matrix multiply of the
-!     form
+!     the code below here performs a standard matrix multiply of the form
 !     D = B.C
-!     where the matrices are dimensioned d(nkbas(k),nval),
-!     b(nkbas(k),mvib(k))
+!     where the matrices are dimensioned d(nkbas(k),nval), b(nkbas(k),mvib(k))
 !     and c(mvib(k),nval). 
 
       d = x0
@@ -2233,7 +1924,7 @@ write(*,*) lmax
 
       implicit double precision(a-h,o-y), logical(z)
       common /size/ nbass,mbass,ibass,neval,ipar,nmax,maxblk,jrot,&
-                    kmin,kmax,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,&
+                    kmin,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,&
                     nblk,loff,loff0,mbass0
       common /outp/ toler,thresh,zpham,zpvec,zvec,ztran,zptra,&
                     zpfun,ilev,ivec,ivec2,jvec,jvec2,kvec,kvec2,&
@@ -2357,7 +2048,7 @@ write(*,*) lmax
  
       implicit double precision(a-h,o-y), logical(z)
       common /size/ nbass,mbass,ibass,neval,ipar,nmax,maxblk,jrot,&
-                    kmin,kmax,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,&
+                    kmin,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,&
                     nblk,loff,loff0,mbass0
       common /outp/ toler,thresh,zpham,zpvec,zvec,ztran,zptra,&
                     zpfun,ilev,ivec,ivec2,jvec,jvec2,kvec,kvec2,&
@@ -2409,7 +2100,7 @@ write(*,*) lmax
   
       implicit double precision (a-h,o-y), logical (z)
       common /size/ nbass,mbass,ibass,neval,ipar,nmax,maxblk,jrot,&
-                    kmin,kmax,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,&
+                    kmin,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,&
                     nblk,loff,loff0,mbass0
       common /outp/ toler,thresh,zpham,zpvec,zvec,ztran,zptra,&
                     zpfun,ilev,ivec,ivec2,jvec,jvec2,kvec,kvec2,&
@@ -2490,7 +2181,7 @@ write(*,*) lmax
  
       implicit double precision (a-h,o-z)
       common /size/ nbass,mbass,ibass,neval,ipar,nmax,maxblk,jrot,&
-                    kmin,kmax,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,&
+                    kmin,meval,ndvr,iang,npnt,keval,nvib,mxblk2,neval2,&
                     nblk,loff,loff0,mbass0
 
       DOUBLE PRECISION, DIMENSION(IBASS) :: W,Z
@@ -2534,19 +2225,4 @@ write(*,*) lmax
       endif
    20 continue
       return
-      end
-
-!###########################
-
-      subroutine nftim(text)
-      common/timing/itime0
-      character text*(*)
-      write(6,10)
-      write(6,*) 'Time at ',text,' is.........'
-      call SYSTEM_CLOCK(itime2,irate2,imax2)
-      itime=(itime2-itime0)/irate2
-      write(6,1)itime
- 1    format(/i10,' secs CPU time used'/) 
-      return
-10    format(/)
       end
