@@ -1,0 +1,4 @@
+&PRT toler=1.0d-4, zdcore=.true.,ztran=.true. /
+1500 2000 2    5000    0   40
+WATER: RADAU
+5447.11367645

@@ -1,0 +1,2691 @@
+      SUBROUTINE F02FJF(N, EM, P, KM, EPS, IP, OP, INF, NOVECS, X,MN, D,
+     * WORK, LWORK, RWORK, LRWORK, IWORK, LIWORK, IFAIL)
+C     MARK 11 RELEASE. NAG COPYRIGHT 1983.                          #017
+C
+C     **************************************************************
+C     *********
+C
+C     F02FJF - ITERATIVE COMPUTATION OF EIGENVALUES LARGEST IN
+C     MAGNI-
+C     TUDE AND CORRESPONDING EIGENVECTORS OF A REAL GENERAL-
+C     IZED SYMMETRIC MATRIX
+C
+C     PURPOSE
+C
+C     A REAL N-SQUARE MATRIX C IS B-SYMMETRIC RELATIVE TO AN
+C     N-SQUARE
+C     SYMMETRIC POSITIVE DEFINITE MATRIX B WHEN
+C     BC = ( C - TRANSPOSED )B.
+C     GIVEN AS OPTIONAL INPUT A SET OF P INITIAL APPROXIMATE
+C     EIGENVECTORS OF A REAL N-SQUARE B-SYMMETRIC MATRIX C CORRES-
+C     PONDING TO P EIGENVALUES OF C LARGEST IN MAGNITUDE, F02FJF
+C     COM-
+C     PUTES EM EIGENVALUES AND EM CORRESPONDING EIGENVECTORS TO A
+C     PRECISION DEPENDENT ON THE STRUCTURE OF B AND C AND ON A GIVEN
+C     TOLERANCE EPS.  THE MATRIX B IS PRESENTED TO F02FJF AS AN
+C     ALGO-
+C     RITHM FOR CALCULATING THE STANDARD INNER PRODUCT ( W, BZ ) =
+C     ( W - TRANSPOSED )BZ GIVEN COLUMN N-VECTORS W AND Z
+C     IMPLEMENTED
+C     AS A FORTRAN COMPATIBLE REAL FUNCTION SUBPROGRAM. THE MATRIX C
+C     IS PRESENTED AS A SUBROUTINE SUBPROGRAM WHICH GIVEN A COLUMN
+C     N-VECTOR Z CALCULATES ITS IMAGE W = CZ UNDER THE MATRIX C.
+C     DEPENDING ON THE CHOICE OF B AND C, F02FJF APPLIES TO A WIDE
+C     VARIETY OF SYMMETRIC EIGENPROBLEMS.
+C
+C     METHOD
+C
+C     F02FJF REPRESENTS RESULTS OF EXTENSIVE MODIFICATIONS AND TESTS
+C     OF SUBROUTINE RITZIT, AN ANSI FORTRAN TRANSLATION OF THE
+C     ALGOL 60 PROCEDURE OF THE SAME NAME.  THE BASIC RUTISHAUSER
+C     -REINSCH ALGORITHM IS PRESERVED.
+C
+C     PAUL J. NIKOLAI
+C     US AIR FORCE FLIGHT DYNAMICS LABORATORY
+C     AFFDL/FBR
+C     WRIGHT - PATTERSON AFB, OHIO 45433
+C     (513) - 255 - 5350
+C
+C     FURTHER MODIFIED AT NAG CENTRAL OFFICE BY SVEN.
+C     CALLS TO SVD ROUTINES REPLACE CALLS AT EACH ITERATION TO
+C     TRED2 AND IMTQL2. THIS AVOIDS FORMING R( R**T ).
+C     WORKSPACE ASSIGNED TO A VECTOR AND REDUCED SLIGHTLY.
+C     SOME MINOR MODIFICATIONS TO IMPROVE PERFORMANCE ON PAGED
+C     MACHINES
+C
+C     FOR A DESCRIPTION OF THE PARAMETERS AND USE OF THIS ROUTINE
+C     SEE THE
+C     NAG LIBRARY MANUAL. PARAMETER ASSOCIATION IS AS BELOW.
+C
+C     ROUTINE     DOCUMENT
+C     N            N
+C     EM            M
+C     P            K
+C     KM          NOITS
+C     EPS          TOL
+C     IP           DOT
+C     OP          IMAGE
+C     INF         MONIT
+C     NOVECS       NOVECS
+C     X            X
+C     MN           NRX
+C     D            D
+C     WORK         WORK
+C     LWORK        LWORK
+C     RWORK        RWORK
+C     LRWORK       LRWORK
+C     IWORK        IWORK
+C     LIWORK       LIWORK
+C     IFAIL        IFAIL
+C
+C     **************************************************************
+C     *********
+C
+C     .. SCALAR ARGUMENTS ..
+      DOUBLE PRECISION EPS
+      INTEGER EM, IFAIL, KM, LIWORK, LRWORK, LWORK, MN, N, NOVECS, P
+C     .. ARRAY ARGUMENTS ..
+      DOUBLE PRECISION D(P), RWORK(LRWORK), WORK(LWORK), X(MN,P)
+      INTEGER IWORK(LIWORK)
+C     .. FUNCTION ARGUMENTS ..
+      DOUBLE PRECISION IP
+C     .. SUBROUTINE ARGUMENTS ..
+C     INF, OP
+C     ..
+C     .. ARRAYS IN COMMON ..
+      DOUBLE PRECISION WMACH(15)
+C     ..
+C     .. LOCAL SCALARS ..
+C$P 1
+      DOUBLE PRECISION SRNAME
+      DOUBLE PRECISION E, EPSMCH, E1, E2, MT, S, T, TOL
+      INTEGER CXP, CX1, FP, F1, G, H, I, IER, IERR, IFLAG, IG, IK,
+     *ISTATE, ITEMP, J, JK, JP, K, KS, L, LF, LG, LH, L1, M, M1,RQP,
+     * RQ1, Z1, Z2
+      LOGICAL ORIG
+C     .. LOCAL ARRAYS ..
+      DOUBLE PRECISION TEMP(1)
+C     .. FUNCTION REFERENCES ..
+C     *** IMPLEMENTATION DEPENDENT DECLARATION ***
+C     DOUBLE PRECISION REAL
+!      DOUBLE PRECISION LOG, EXP, F01YAV, G05CAF, SQRT
+      DOUBLE PRECISION F01YAV, G05CAF
+      INTEGER P01AAF
+C     .. SUBROUTINE REFERENCES ..
+C     F01AJF, F01LZF, F01YAJ, F01YAL, F01YAM, F01YAP, F01YAX,
+C     F01YAY, F02AMF, F02SZF, X02ZAZ
+C     ..
+      EXTERNAL IP, OP, INF
+      COMMON /AX02ZA/ WMACH
+      DATA SRNAME /8H F02FJF /
+C
+C     THE LOCAL VARIABLE ARRAYS FROM RITZIT ARE ASSIGNED TO THE
+C     VARIABLE ARRAY WORK AS FOLLOWS
+C
+C     B  - WORK( I ), I = 1, ..., P**2.
+C     U  - WORK( I ), I = 1, ..., N.
+C     W  - WORK( I ), I = N + 1, ..., 2*N.
+C     CX - WORK( I ), I = CX1, ..., CX1 + P - 1
+C     WHERE  CX1 = MAX( P**2, 2*N ) + 1
+C     F  - WORK( I ), I = CX1 + P, ..., CX1 + 2*P - 1
+C     RQ - WORK( I ), I = CX1 + 2*P, ..., CX1 + 3*P - 1
+C
+C     V, R AND Q ARE NOT NEEDED.
+C
+C     TEST THE INPUT PARAMETERS.
+C
+      ITEMP = MAX(P**2,2*N)
+      IF (N.GE.1 .AND. EM.GE.1 .AND. EM.LT.P .AND. P.LE.N .AND.MN.GE.N .
+     *AND. LWORK.GE.(ITEMP+3*P) .AND. LRWORK.GE.1 .AND.LIWORK.GE.1)
+     * GO TO 20
+      IFAIL = P01AAF(IFAIL,1,SRNAME)
+      RETURN
+   20 CONTINUE
+      IF (KM.LT.0) KM = 100
+C
+      CALL X02ZAZ
+C
+      EPSMCH = WMACH(3)
+      TOL = EPS
+      IF (TOL.LT.EPSMCH .OR. TOL.GT.1.0D0) TOL = EPSMCH
+      IK = P - NOVECS
+      IF (NOVECS.LT.0 .OR. NOVECS.GT.P) IK = P
+C
+C     ASSIGN THE PARAMETERS THAT SPLIT UP THE WORKSPACE.
+C
+      CX1 = ITEMP + 1
+      CXP = ITEMP + P
+      F1 = CXP + 1
+      FP = CXP + P
+      RQ1 = FP + 1
+      RQP = FP + P
+C
+C     COMMENTS SUCH AS THE NEXT ONE REFER TO STATEMENT LABELS IN
+C     RITZIT.
+C     THE NEXT STATEMENT IS START.
+C
+      MT = WMACH(5)/EPSMCH
+      E = 0.0D0
+      G = 0
+      LG = 0
+      IG = 1
+      IERR = 0
+      JP = P - 1
+      H = 0
+      LH = 0
+      Z1 = 0
+      Z2 = 0
+      KS = 0
+      M = 1
+      IFLAG = 0
+      WORK(CXP) = 0.0D0
+      DO 40 L=F1,FP
+         WORK(L) = 4.0D0
+   40 CONTINUE
+      DO 60 L=RQ1,RQP
+         WORK(L) = 0.0D0
+   60 CONTINUE
+      IF (NOVECS.EQ.P) GO TO 120
+      DO 100 L=1,IK
+         DO 80 J=1,N
+            X(J,L) = 2.0D0*G05CAF(0.0D0) - 1.0D0
+   80    CONTINUE
+  100 CONTINUE
+  120 CONTINUE
+      IK = 1
+      LF = IG
+      L1 = P
+C
+C     HERE AND ELSEWHERE - GO TO 1100 - IS EQUIVALENT TO
+C     - CALL ORTHOG - WHERE ORTHOG PERFORMS GRAM - SCHMIDT
+C     ORTHOGONALIZATION, WITH RESPECT TO B, OF THE COLUMNS OF X.
+C
+      GO TO 1100
+C
+C     RAYLEIGH - RITZ STEP
+C     STATEMENT 140 IS LOOP.
+C
+C     FIRST FORM Y = C*X( R ). Y IS OVERWRITTEN ON X.
+C
+  140 DO 160 K=IG,P
+         CALL OP(IFLAG, N, X(1,K), WORK, RWORK, LRWORK, IWORK,LIWORK)
+         IF (IFLAG.LT.0) GO TO 1460
+C
+         CALL F01YAX(N, WORK, 1, X(1,K), 1)
+C
+  160 CONTINUE
+      IK = 2
+      LF = IG
+      L1 = P
+C
+C     PERFORM GRAM - SCHMIDT OF Y SO THAT Y = UR. U IS OVERWRITTEN
+C     ON X
+C     AND R IS STORED IN THE LOWER TRIANGULAR PART OF WORK( 1 ),
+C     ...,
+C     WORK( P**2 ).
+C
+      GO TO 1100
+C
+  180 IF (KS.NE.0) GO TO 240
+C
+C     MEASURES AGAINST UNHAPPY CHOICE OF INITIAL VECTORS
+C
+      ITEMP = -P
+      DO 220 K=1,P
+         ITEMP = ITEMP + P + 1
+         IF (WORK(ITEMP).NE.0.0D0) GO TO 220
+         DO 200 I=1,N
+            X(I,K) = 2.0D0*G05CAF(0.0D0) - 1.0D0
+  200    CONTINUE
+         KS = 1
+  220 CONTINUE
+      IF (KS.NE.1) GO TO 240
+      IK = 1
+      LF = 1
+      L1 = P
+C
+C     COLUMNS OF Y ARE NOT ORTHOGONAL, SO PERFORM GRAM - SCHMIDT OF
+C     X. RETURN WILL BE TO LABEL 140.
+C
+      GO TO 1100
+C
+C     PERFORM SINGULAR VALUE DECOMPOSITION OF R**T VIA A SINGULAR
+C     VALUE DECOMPOSITION OF R. R**T = A*D*( B**T ). FORM
+C     X( R + 1 ) = U*B DURING THE DECOMPOSITION BY ACCUMULATING THE
+C     TRANSFORMATIONS ON U.
+C
+C     THE ELEMENTS REPRESENTING CX( G + 1 ), ..., CX( P ) OF WORK
+C     ARE
+C     USED AS WORKSPACE.
+C
+  240 IER = 0
+      ITEMP = G*P + IG
+      K = CX1 + G
+      CALL F01LZF(P-G, WORK(ITEMP), P, WORK(ITEMP), P, .FALSE.,WORK(RQ1)
+     *, .FALSE., .TRUE., X(1,IG), MN, N, .FALSE., TEMP,1, 1, D(IG),
+     * WORK(K), WORK(RQ1), WORK(RQ1), IER)
+C
+      IER = 1
+      CALL F02SZF(P-G, D(IG), WORK(K), D(IG), .FALSE., WORK(RQ1),.TRUE.,
+     * X(1,IG), MN, N, .FALSE., TEMP, 1, 1, WORK(K),WORK(RQ1), WORK(RQ1)
+     *, IER)
+      IF (IER.EQ.0) GO TO 260
+      IFAIL = P01AAF(IFAIL,5,SRNAME)
+      RETURN
+  260 CONTINUE
+C
+      KS = KS + 1
+      E = MAX(D(P),E)
+C
+C     RANDOMIZATION ON THE FIRST THREE STEPS.
+C
+      IF (Z1.GT.3) GO TO 300
+      DO 280 J=1,N
+         X(J,P) = 2.0D0*G05CAF(0.0D0) - 1.0D0
+  280 CONTINUE
+      IK = 3
+      LF = P
+      L1 = P
+C
+      GO TO 1100
+C
+C     COMPUTE CONTROL QUANTITIES CX( I ).
+C
+  300 ITEMP = CX1 + G - 1
+      DO 360 K=IG,JP
+         ITEMP = ITEMP + 1
+         S = (D(K)-E)*(D(K)+E)
+         IF (S.GT.0.0D0) GO TO 320
+         WORK(ITEMP) = 0.0D0
+         GO TO 360
+  320    IF (E.NE.0.0D0) GO TO 340
+         WORK(ITEMP) = 1.0D+3 + LOG(D(K))
+         GO TO 360
+  340    WORK(ITEMP) = LOG((D(K)+SQRT(S))/E)
+  360 CONTINUE
+C
+C     ACCEPTANCE TEST FOR EIGENVALUES INCLUDING ADJUSTMENT OF EM AND
+C     H SUCH THAT D( EM ).GT. E, D( H ).GT. E AND D( EM )DOES NOT
+C     OSCILLATE STRONGLY
+C
+      I = Z1 - 1
+      K = G
+  380 ITEMP = RQ1 + K
+      K = K + 1
+      IF (EM.LT.K) GO TO 420
+      IF (D(K).LE.E) GO TO 400
+      IF (I.LE.0) GO TO 380
+      IF (D(K).GT.0.999D0*WORK(ITEMP)) GO TO 380
+  400 CONTINUE
+      EM = K - 1
+      IERR = 2
+C
+C     STATEMENT 420 IS EX4.
+C
+  420 IF (EM.EQ.0) GO TO 1280
+      K = H
+      S = 1.0D0 + 0.1D0*TOL
+  440 ITEMP = RQ1 + K
+      K = K + 1
+      IF (D(K).EQ.0.0D0) GO TO 460
+      IF (D(K).LE.S*WORK(ITEMP)) GO TO 440
+  460 CONTINUE
+      H = K - 1
+      K = EM
+  480 K = K + 1
+      IF (K.GT.H) GO TO 500
+      IF (D(K).GT.E) GO TO 480
+      H = K - 1
+C
+C     ACCEPTANCE TEST FOR EIGENVECTORS
+C
+  500 L = G
+      E2 = 0.0D0
+      DO 620 K=IG,JP
+         IF (K.NE.(L+1)) GO TO 560
+C
+C     CHECK FOR NESTED EIGENVALUES
+C
+         L = K
+         L1 = K
+         S = 0.5D0/DBLE(KS)
+         T = 1.0D0/DBLE(KS*M)
+  520    ITEMP = CX1 + L
+         L = L + 1
+         IF (L.GT.JP) GO TO 540
+         IF ((WORK(ITEMP)*(WORK(ITEMP)+S)+T).GT.WORK(ITEMP-1)**2)
+     *   GO TO 520
+  540    CONTINUE
+         L = L - 1
+C
+C     THE NEXT STATEMENT IS EX5.
+C
+         IF (L.LE.H) GO TO 560
+         L = L1 - 1
+         GO TO 640
+  560    CALL OP(IFLAG, N, X(1,K), WORK, RWORK, LRWORK, IWORK,LIWORK)
+         IF (IFLAG.LT.0) GO TO 1460
+         S = 0.0D0
+         DO 580 J=1,L
+            IF (ABS(D(J)-D(K)).GE.0.01D0*D(K)) GO TO 580
+            T = IP(IFLAG,N,WORK,X(1,J),RWORK,LRWORK,IWORK,LIWORK)
+            IF (IFLAG.LT.0) GO TO 1460
+C
+            CALL F01YAY(N, -T, X(1,J), 1, WORK, 1)
+C
+            S = S + T*T
+  580    CONTINUE
+         T = 1.0D0
+         IF (S.NE.0.0D0) T = IP(IFLAG,N,WORK,WORK,RWORK,LRWORK,IWORK,
+     *   LIWORK)
+         IF (IFLAG.LT.0) GO TO 1460
+         E2 = MAX(E2,SQRT(T/(S+T)))
+         IF (K.NE.L) GO TO 620
+C
+C     TEST FOR ACCEPTANCE OF GROUP OF EIGENVECTORS
+C
+         ITEMP = F1 + EM - 1
+         IF (L.GE.EM .AND. D(EM)*WORK(ITEMP).LT.TOL*(D(EM)-E)) G =EM
+         ITEMP = F1 + L - 1
+         IF (E2.GE.WORK(ITEMP)) GO TO 600
+         ITEMP = F1 + L1 - 1
+         TEMP(1) = E2
+C
+         CALL F01YAX(L-L1+1, TEMP, 0, WORK(ITEMP), 1)
+C
+  600    IF (L.LE.EM .AND. D(L)*WORK(ITEMP).LT.TOL*(D(L)-E)) G = L
+  620 CONTINUE
+C
+C     ADJUST M.
+C     STATEMENT 640 IS EX6.
+C
+  640 IG = G + 1
+      IF (E.GT.0.04D0*D(1)) GO TO 660
+      M = 1
+      K = 1
+      GO TO 680
+  660 E2 = 2.0D0/E
+      E1 = 0.51D0*E2
+      K = 2*INT(4.0/MIN(WORK(CX1),4.0D0))
+      M = MIN(M,K)
+C
+C     REDUCE EM IF CONVERGENCE WOULD BE TOO SLOW.
+C
+  680 IK = F1 + EM - 1
+      IF (WORK(IK).EQ.0.0D0) GO TO 740
+      IF (10*KS.GE.9*KM) GO TO 740
+      ITEMP = CX1 + EM - 1
+      S = DBLE(K)*WORK(ITEMP)
+      IF (S.GE.0.05D0) GO TO 700
+      T = 0.5D0*S*WORK(ITEMP)
+      GO TO 720
+  700 T = WORK(ITEMP) + LOG(0.5D0+0.5D0*EXP(-2.0D0*S))/DBLE(K)
+  720 S = LOG(D(EM)*WORK(IK)/(TOL*(D(EM)-E)))
+C
+C     EM IS REDUCED HERE
+C
+      IF (S*DBLE(KS).LE.T*DBLE((KM-KS)*KM)) GO TO 740
+      IERR = 3
+      EM = EM - 1
+C
+C     STATEMENT 740 IS EX2.
+C
+  740 ITEMP = RQ1 + G
+C
+      CALL F01YAX(JP-IG+1, D(IG), 1, WORK(ITEMP), 1)
+C
+      IF (KS.GE.KM) IERR = 4
+      IF (G.GE.EM .OR. KS.GE.KM) GO TO 1280
+      ISTATE = 0
+      IF (H.EQ.LH) GO TO 760
+      LH = H
+      ISTATE = 1
+  760 CONTINUE
+      IF (G.EQ.LG) GO TO 800
+      LG = G
+      IF (ISTATE.EQ.1) GO TO 780
+      ISTATE = 2
+      GO TO 800
+  780 CONTINUE
+      ISTATE = 3
+  800 CONTINUE
+      CALL INF(ISTATE, KS, H, G, P, WORK(F1), D)
+C
+C     STATEMENT 820 IS EX1.
+C
+  820 IF ((KS+M).LE.KM) GO TO 840
+      Z2 = -1
+      IF (M.GT.1) M = 2*((KM-KS+1)/2)
+  840 M1 = M
+C
+C     SHORTCUT LAST INTERMEDIATE BLOCK IF ALL F( I )ARE SUFFICIENTLY
+C     SMALL.
+C
+      IF (L.LT.EM) GO TO 880
+      ITEMP = F1 + EM - 1
+      S = D(EM)*WORK(ITEMP)/(TOL*(D(EM)-E))
+      T = (S+1.0D0)*(S-1.0D0)
+      IF (T.LE.0.0D0) GO TO 140
+      ITEMP = CX1 + EM - 1
+      I = CX1 + H
+      S = LOG(S+SQRT(T))/(WORK(ITEMP)-WORK(I))
+      M1 = 2*INT(0.5D0*S+1.01D0)
+      IF (M1.LE.M) GO TO 860
+      M1 = M
+      GO TO 880
+  860 Z2 = -1
+C
+C     CHEBYSHEV ITERATION
+C
+  880 IF (M.LT.1) GO TO 980
+      IF (M.GT.1) GO TO 920
+      DO 900 K=IG,P
+         CALL OP(IFLAG, N, X(1,K), WORK, RWORK, LRWORK, IWORK,LIWORK)
+         IF (IFLAG.LT.0) GO TO 1460
+C
+         CALL F01YAX(N, WORK, 1, X(1,K), 1)
+C
+  900 CONTINUE
+      GO TO 980
+  920 L1 = M1 - 4
+      DO 960 K=IG,P
+         CALL OP(IFLAG, N, X(1,K), WORK, RWORK, LRWORK, IWORK,LIWORK)
+         IF (IFLAG.LT.0) GO TO 1460
+C
+C     BEWARE THE NEXT STATEMENT IF PASS BY COPY EVER COMES.
+C
+         CALL F01YAL(N, E1, WORK, 1, WORK(N+1), 1)
+C
+         CALL OP(IFLAG, N, WORK(N+1), WORK, RWORK, LRWORK, IWORK,LIWORK)
+         IF (IFLAG.LT.0) GO TO 1460
+C
+         CALL F01YAY(N, -E2, WORK, 1, X(1,K), 1)
+C
+         CALL F01YAJ(N, X(1,K), 1)
+C
+         IF (L1.LT.0) GO TO 960
+         DO 940 J=4,M1,2
+            CALL OP(IFLAG, N, X(1,K), WORK, RWORK, LRWORK, IWORK,LIWORK)
+            IF (IFLAG.LT.0) GO TO 1460
+C
+C     BEWARE THE FOLLOWING STATEMENT IF PASS BY COPY EVER COMES.
+C
+            CALL F01YAY(N, -E2, WORK, 1, WORK(N+1), 1)
+C
+            CALL OP(IFLAG, N, WORK(N+1), WORK, RWORK, LRWORK,IWORK,
+     *       LIWORK)
+            IF (IFLAG.LT.0) GO TO 1460
+C
+            CALL F01YAY(N, E2, WORK, 1, X(1,K), 1)
+C
+            CALL F01YAJ(N, X(1,K), 1)
+  940    CONTINUE
+  960 CONTINUE
+  980 IK = 4
+      LF = IG
+      L1 = P
+      GO TO 1100
+C
+C     DISCOUNTING THE ERROR QUANTITIES F
+C
+ 1000 IF (G.GE.H) GO TO 1080
+      IF (M.NE.1) GO TO 1040
+      ITEMP = F1 + G
+      DO 1020 K=IG,H
+         WORK(ITEMP) = WORK(ITEMP)*(D(H+1)/D(K))
+         ITEMP = ITEMP + 1
+ 1020 CONTINUE
+      GO TO 1080
+ 1040 ITEMP = CX1 + H
+      T = EXP(-DBLE(M1)*WORK(ITEMP))
+      I = CX1 + G
+      DO 1060 K=IG,H
+         S = EXP(-DBLE(M1)*(WORK(I)-WORK(ITEMP)))
+         J = I + P
+         WORK(J) = S*WORK(J)*(1.0D0+T*T)/(1.0D0+(S*T)**2)
+         I = I + 1
+ 1060 CONTINUE
+ 1080 KS = KS + M1
+      Z2 = Z2 - M1
+C
+C     POSSIBLE REPETITION OF INTERMEDIATE STEPS
+C
+      IF (Z2.GE.0) GO TO 820
+      Z1 = Z1 + 1
+      Z2 = 2*Z1
+      M = 2*M
+      GO TO 140
+C
+C     PERFORMS ORTHONORMALIZATION OF COLUMNS 1 THROUGH L1 OF ARRAY
+C     X ASSUMING THAT COLUMNS 1 THROUGH LF - 1 ARE ALREADY ORTHO -
+C     NORMAL
+C
+ 1100 DO 1260 K=LF,L1
+         ORIG = .TRUE.
+ 1120    T = 0.0D0
+         JK = K - 1
+         IF (JK.LE.0) GO TO 1180
+         DO 1160 I=1,JK
+            S = IP(IFLAG,N,X(1,I),X(1,K),RWORK,LRWORK,IWORK,LIWORK)
+            IF (IFLAG.LT.0) GO TO 1460
+            IF (.NOT.ORIG) GO TO 1140
+            ITEMP = (K-1)*P + I
+            WORK(ITEMP) = S
+ 1140       T = T + S*S
+C
+C     BEWARE THE FOLLOWING STATEMENT IF PASS BY COPY EVER COMES.
+C
+            CALL F01YAY(N, -S, X(1,I), 1, X(1,K), 1)
+C
+ 1160    CONTINUE
+ 1180    S = IP(IFLAG,N,X(1,K),X(1,K),RWORK,LRWORK,IWORK,LIWORK)
+         IF (IFLAG.LT.0) GO TO 1460
+         T = S + T
+         IF (S.LE.0.001D0*T) GO TO 1200
+         IF (T.GT.MT) GO TO 1220
+ 1200    ORIG = .FALSE.
+         IF (S.GT.MT) GO TO 1120
+         S = 0.0D0
+ 1220    S = SQRT(S)
+         ITEMP = (K-1)*P + K
+         WORK(ITEMP) = S
+         IF (S.EQ.0.0D0) GO TO 1240
+         S = 1.0D0/S
+C
+ 1240    CALL F01YAP(N, S, X(1,K), 1)
+C
+ 1260 CONTINUE
+      GO TO (140, 180, 300, 1000, 1300), IK
+C
+C     STATEMENT 1280 IS EX.
+C
+ 1280 EM = G
+      ISTATE = 4
+      CALL INF(ISTATE, KS, H, G, P, WORK(F1), D)
+C
+C     SOLVE EIGENVALUE PROBLEM OF PROJECTION OF MATRIX C.
+C
+      IK = 5
+      LF = 1
+      L1 = JP
+      GO TO 1100
+ 1300 CONTINUE
+      DO 1340 K=1,JP
+         CALL OP(IFLAG, N, X(1,K), X(1,P), RWORK, LRWORK, IWORK,LIWORK)
+         IF (IFLAG.LT.0) GO TO 1460
+         ITEMP = (K-1)*JP + K
+         DO 1320 I=K,JP
+            WORK(ITEMP) = IP(IFLAG,N,X(1,I),X(1,P),RWORK,LRWORK,IWORK,
+     *      LIWORK)
+            IF (IFLAG.LT.0) GO TO 1460
+            ITEMP = ITEMP + 1
+ 1320    CONTINUE
+ 1340 CONTINUE
+C
+      CALL F01AJF(JP, MT, WORK, JP, D, WORK(CX1), WORK, JP)
+      IER = 1
+      CALL F02AMF(JP, EPSMCH, D, WORK(CX1), WORK, JP, IER)
+      IF (IER.EQ.0) GO TO 1360
+      IFAIL = P01AAF(IFAIL,5,SRNAME)
+      RETURN
+ 1360 CONTINUE
+C
+C     ARRANGE EIGENVALUES IN ORDER OF DECREASING ABSOLUTE VALUE.
+C
+      DO 1400 J=1,JP
+         K = J
+         DO 1380 I=J,JP
+            IF (ABS(D(I)).GT.ABS(D(K))) K = I
+ 1380    CONTINUE
+         IF (K.LE.J) GO TO 1400
+         T = D(K)
+         D(K) = D(J)
+         D(J) = T
+         ITEMP = (K-1)*JP + 1
+         IK = (J-1)*JP + 1
+C
+C     BEWARE THE FOLLOWING STATEMENT IF PASS BY COPY EVER COMES.
+C
+         CALL F01YAM(JP, WORK(ITEMP), 1, WORK(IK), 1)
+C
+ 1400 CONTINUE
+      DO 1440 J=1,N
+C
+         CALL F01YAX(JP, X(J,1), MN, WORK(CX1), 1)
+C
+         DO 1420 I=1,JP
+            ITEMP = (I-1)*JP + 1
+C
+            X(J,I) = F01YAV(JP,WORK(CX1),1,WORK(ITEMP),1)
+C
+ 1420    CONTINUE
+ 1440 CONTINUE
+      KM = KS
+      D(P) = E
+      IFLAG = IERR
+C
+ 1460 IFAIL = P01AAF(IFAIL,IFLAG,SRNAME)
+      RETURN
+C
+C     END OF F02FJF.
+C
+      END
+      SUBROUTINE F02FJZ(ISTATE, NEXTIT, NEVALS, NEVECS, K, F, D)
+C     MARK 11 RELEASE. NAG COPYRIGHT 1983.
+C     .. SCALAR ARGUMENTS ..
+      INTEGER ISTATE, K, NEVALS, NEVECS, NEXTIT
+C     .. ARRAY ARGUMENTS ..
+      DOUBLE PRECISION D(K), F(K)
+C     ..
+C
+C  F02FJZ IS A DUMMY VERSION OF MONIT FOR USE WITH F02FJF.
+C
+      RETURN
+C
+C  END OF F02FJZ.
+C
+      END
+      SUBROUTINE F02SZF(N, D, E, SV, WANTB, B, WANTY, Y, NRY, LY,WANTZ,
+     * Z, NRZ, NCZ, WORK1, WORK2, WORK3, IFAIL)
+C     MARK 8 RELEASE. NAG COPYRIGHT 1979.
+C     MARK 9 REVISED. IER-328 (SEP 1981).
+C     WRITTEN BY S. HAMMARLING, MIDDLESEX POLYTECHNIC (SVDBID)
+C
+C     F02SZF RETURNS PART OR ALL OF THE SINGULAR VALUE
+C     DECOMPOSITION OF THE N*N UPPER BIDIAGONAL MATRIX A. THAT
+C     IS, A IS FACTORIZED AS
+C
+C     A = Q*DIAG(SV)*(P**T) ,
+C
+C     WHERE Q AND P ARE N*N ORTHOGONAL MATRICES AND DIAG(SV)
+C     IS AN N*N DIAGONAL MATRIX WITH NON-NEGATIVE DIAGONAL
+C     ELEMENTS SV(1),SV(2),..., SV(N), THESE BEING THE
+C     SINGULAR VALUES OF A.
+C
+C     IF WANTB IS .TRUE. THEN B RETURNS (Q**T)*B.
+C     IF WANTY IS .TRUE. THEN Y RETURNS Y*Q.
+C     IF WANTZ IS .TRUE. THEN Z RETURNS (P**T)*Z.
+C
+C     INPUT PARAMETERS.
+C
+C     N     - THE ORDER OF THE MATRIX. MUST BE AT LEAST 1.
+C
+C     D     - N ELEMENT VECTOR SUCH THAT D(I)=A(I,I), I=1,2,...,N.
+C             D IS UNALTERED UNLESS ROUTINE IS CALLED WITH SV=D.
+C
+C     E     - N ELEMENT VECTOR SUCH THAT E(I)=A(I-1,I), I=2,3,...,N.
+C             E(1) IS NOT REFERENCED.
+C             E IS UNALTERED UNLESS ROUTINE IS CALLED WITH WORK1=E.
+C
+C     WANTB - MUST BE .TRUE. IF (Q**T)*B IS REQUIRED.
+C             IF WANTB IS .FALSE. THEN B IS NOT REFERENCED.
+C
+C     B     - AN N ELEMENT REAL VECTOR.
+C
+C     WANTY - MUST BE .TRUE. IF Y*Q IS REQUIRED.
+C             IF WANTY IS .FALSE. THEN Y IS NOT REFERENCED.
+C
+C     Y     - AN LY*N REAL MATRIX.
+C
+C     NRY   - IF WANTY IS .TRUE. THEN NRY MUST BE THE ROW
+C             DIMENSION OF Y AS DECLARED IN THE CALLING
+C             PROGRAM AND MUST BE AT LEAST LY.
+C
+C     LY    - IF WANTY IS .TRUE. THEN LY MUST BE THE NUMBER
+C             OF ROWS OF Y AND MUST BE AT LEAST 1.
+C
+C     WANTZ - MUST BE .TRUE. IF (P**T)*Z IS REQUIRED.
+C             IF WANTZ IS .FALSE. THEN Z IS NOT REFERENCED.
+C
+C     Z     - AN N*NCZ REAL MATRIX.
+C
+C     NRZ   - IF WANTZ IS .TRUE. THEN NRZ MUST BE THE ROW
+C             DIMENSION OF Z AS DECLARED IN THE CALLING
+C             PROGRAM AND MUST BE AT LEAST N.
+C
+C     NCZ   - IF WANTZ IS .TRUE. THEN NCZ MUST BE THE
+C             NUMBER OF COLUMNS OF Z AND MUST BE AT LEAST
+C             1.
+C
+C     IFAIL - THE USUAL FAILURE PARAMETER. IF IN DOUBT SET
+C             IFAIL TO ZERO BEFORE CALLING F02SZF.
+C
+C     OUTPUT PARAMETERS.
+C
+C     SV    - N ELEMENT VECTOR CONTAINING THE SINGULAR
+C             VALUES OF A. THEY ARE ORDERED SO THAT
+C             SV(1).GE.SV(2).GE. ... .GE.SV(N). THE ROUTINE
+C             MAY BE CALLED WITH SV=D.
+C
+C     B     - IF WANTB IS .TRUE. THEN B WILL RETURN THE N
+C             ELEMENT VECTOR (Q**T)*B.
+C
+C     Y     - IF WANTY IS .TRUE. THEN Y WILL RETURN THE
+C             LY*N MATRIX Y*Q.
+C
+C     Z     - IF WANTZ IS .TRUE. THEN Z WILL RETURN THE N*NCZ MATRIX
+C             (P**T)*Z.
+C
+C     IFAIL - ON NORMAL RETURN IFAIL WILL BE ZERO.
+C             IN THE UNLIKELY EVENT THAT THE QR-ALGORITHM
+C             FAILS TO FIND THE SINGULAR VALUES IN 50*N
+C             ITERATIONS THEN IFAIL WILL BE 2 OR MORE AND
+C             SUCH THAT SV(1),SV(2),..,SV(IFAIL-1) MAY NOT
+C             HAVE BEEN FOUND. SEE WORK1 BELOW. THIS
+C             FAILURE IS NOT LIKELY TO OCCUR.
+C             IF AN INPUT PARAMETER IS INCORRECTLY SUPPLIED
+C             THEN IFAIL IS SET TO UNITY.
+C
+C     WORKSPACE PARAMETERS.
+C
+C     WORK1 - AN N ELEMENT VECTOR. IF E IS NOT REQUIRED ON
+C             RETURN THEN THE ROUTINE MAY BE CALLED WITH
+C             WORK1=E. WORK1(1) RETURNS THE TOTAL NUMBER OF
+C             ITERATIONS TAKEN BY THE  QR-ALGORITHM. IF
+C             IFAIL IS POSITIVE ON RETURN THEN THE MATRIX A
+C             IS GIVEN  BY A=Q*C*(P**T) , WHERE C IS THE
+C             UPPER BIDIAGONAL MATRIX WITH SV AS ITS
+C             DIAGONAL AND WORK1 AS ITS SUPER-DIAGONAL.
+C
+C     WORK2
+C     WORK3 - N ELEMENT VECTORS. IF WANTZ IS .FALSE. THEN WORK2 AND
+C             WORK3 ARE NOT REFERENCED.
+C
+C     .. SCALAR ARGUMENTS ..
+      INTEGER IFAIL, LY, N, NCZ, NRY, NRZ
+      LOGICAL WANTB, WANTY, WANTZ
+C     .. ARRAY ARGUMENTS ..
+      DOUBLE PRECISION B(N), D(N), E(N), SV(N), WORK1(N),
+     * WORK2(N), WORK3(N),Y(NRY,N), Z(NRZ,NCZ)
+C     ..
+C     .. LOCAL SCALARS ..
+C$P 1
+      DOUBLE PRECISION SRNAME
+      DOUBLE PRECISION ANORM, BIG, C, DK, DKM1, DL, EK, EKM1,
+     * EPS, F, G, RSQTPS, S, SHIFT, SMALL, SQTEPS, SVI, T, X
+      INTEGER I, IERR, ITER, J, JJ, K, KK, L, LL, LM1, LP1, MAXIT
+C     .. FUNCTION REFERENCES ..
+!      DOUBLE PRECISION F01LZZ, SQRT, X02AAF, X02AGF
+      DOUBLE PRECISION F01LZZ, X02AAF, X02AGF
+      INTEGER P01AAF
+C     .. SUBROUTINE REFERENCES ..
+C     F01LZW, F01LZY, F02SZZ
+C     ..
+      DATA SRNAME /8H F02SZF /
+      IERR = IFAIL
+      IF (IERR.EQ.0) IFAIL = 1
+C
+      IF (N.LT.1) GO TO 500
+      IF (WANTY .AND. (NRY.LT.LY .OR. LY.LT.1)) GO TO 500
+      IF (WANTZ .AND. (NRZ.LT.N .OR. NCZ.LT.1)) GO TO 500
+C
+      SMALL = X02AGF(0.0D0)
+      BIG = 1.0D0/SMALL
+      EPS = X02AAF(0.0D0)
+      SQTEPS = SQRT(EPS)
+      RSQTPS = 1.0D0/SQTEPS
+C
+      ITER = 0
+      K = N
+      SV(1) = D(1)
+      ANORM = ABS(D(1))
+      IF (N.EQ.1) GO TO 280
+C
+      DO 20 I=2,N
+         SV(I) = D(I)
+         WORK1(I) = E(I)
+         ANORM = MAX(ANORM,ABS(D(I)),ABS(E(I)))
+   20 CONTINUE
+C
+      MAXIT = 50*N
+      EPS = EPS*ANORM
+C
+C     MAXIT IS THE MAXIMUM NUMBER OF ITERATIONS ALLOWED.
+C     EPS WILL BE USED TO TEST FOR NEGLIGIBLE ELEMENTS.
+C     START MAIN LOOP. ONE SINGULAR VALUE IS FOUND FOR EACH
+C     VALUE OF K. K GOES IN OPPOSITE DIRECTION TO KK.
+C
+      DO 260 KK=2,N
+C
+C     NOW TEST FOR SPLITTING. L GOES IN OPPOSITE DIRECTION TO LL.
+C
+   40    L = K
+         DO 60 LL=2,K
+            IF (ABS(WORK1(L)).LE.EPS) GO TO 240
+            L = L - 1
+            IF (ABS(SV(L)).LT.EPS) GO TO 180
+   60    CONTINUE
+C
+   80    IF (ITER.EQ.MAXIT) GO TO 280
+C
+C     MAXIT QR-STEPS WITHOUT CONVERGENCE. FAILURE.
+C
+         ITER = ITER + 1
+C
+C     NOW DETERMINE SHIFT.
+C
+         LP1 = L + 1
+         DL = SV(L)
+         DKM1 = SV(K-1)
+         DK = SV(K)
+         EKM1 = 0.0D0
+         IF (K.NE.2) EKM1 = WORK1(K-1)
+         EK = WORK1(K)
+         F = (DKM1-DK)*(DKM1+DK) + (EKM1-EK)*(EKM1+EK)
+         F = F/(2.0D0*EK*DKM1)
+         G = ABS(F)
+         IF (G.LE.RSQTPS) G = SQRT(1.0D0+F**2)
+         IF (F.LT.0.0D0) G = -G
+C
+         SHIFT = EK*(EK-DKM1/(F+G))
+         F = (DL-DK)*(DL+DK) - SHIFT
+         X = DL*WORK1(LP1)
+C
+C     NOW PERFORM THE QR-STEP AND CHASE ZEROS.
+C
+         DO 140 I=LP1,K
+C
+            T = F01LZZ(F,X,SMALL,BIG)
+C
+            CALL F01LZW(T, C, S, SQTEPS, RSQTPS, BIG)
+C
+            IF (I.GT.LP1) WORK1(I-1) = C*F + S*X
+            F = C*SV(I-1) + S*WORK1(I)
+            WORK1(I) = C*WORK1(I) - S*SV(I-1)
+            X = S*SV(I)
+            SVI = C*SV(I)
+C
+            IF (.NOT.WANTZ) GO TO 100
+            WORK2(I) = C
+            WORK3(I) = S
+C
+  100       T = F01LZZ(F,X,SMALL,BIG)
+C
+            CALL F01LZW(T, C, S, SQTEPS, RSQTPS, BIG)
+C
+            IF (WANTY) CALL F01LZY(LY, C, S, Y(1,I-1), Y(1,I))
+C
+            IF (.NOT.WANTB) GO TO 120
+            T = B(I)
+            B(I) = C*T - S*B(I-1)
+            B(I-1) = C*B(I-1) + S*T
+C
+  120       SV(I-1) = C*F + S*X
+            F = C*WORK1(I) + S*SVI
+            SV(I) = C*SVI - S*WORK1(I)
+C
+            IF (I.EQ.K) GO TO 140
+            X = S*WORK1(I+1)
+            WORK1(I+1) = C*WORK1(I+1)
+C
+  140    CONTINUE
+C
+         WORK1(K) = F
+         IF (.NOT.WANTZ) GO TO 40
+         DO 160 J=1,NCZ
+C
+            CALL F02SZZ(K-L+1, WORK2(L), WORK3(L), Z(L,J))
+C
+  160    CONTINUE
+         GO TO 40
+C
+C     COME TO NEXT PIECE IF SV(L-1) IS NEGLIGIBLE. FORCE A SPLIT.
+C
+  180    LM1 = L
+         L = L + 1
+         X = WORK1(L)
+         WORK1(L) = 0.0D0
+         DO 220 I=L,K
+C
+            T = F01LZZ(SV(I),X,SMALL,BIG)
+C
+            CALL F01LZW(T, C, S, SQTEPS, RSQTPS, BIG)
+C
+            IF (WANTY) CALL F01LZY(LY, C, -S, Y(1,LM1), Y(1,I))
+C
+            IF (.NOT.WANTB) GO TO 200
+            T = B(I)
+            B(I) = C*T + S*B(LM1)
+            B(LM1) = C*B(LM1) - S*T
+C
+  200       SV(I) = C*SV(I) + S*X
+            IF (I.EQ.K) GO TO 220
+            X = -S*WORK1(I+1)
+            WORK1(I+1) = C*WORK1(I+1)
+C
+  220    CONTINUE
+C
+C     IF WE COME HERE WITH L=K THEN A SINGULAR VALUE HAS BEEN
+C     FOUND.
+C
+  240    IF (L.LT.K) GO TO 80
+C
+         K = K - 1
+  260 CONTINUE
+C
+  280 IFAIL = K - 1
+      WORK1(1) = ITER
+C
+C     NOW MAKE SINGULAR VALUES NON-NEGATIVE.
+C     K WILL BE 1 UNLESS FAILURE HAS OCCURED.
+C
+      DO 320 J=K,N
+         IF (SV(J).GE.0.0D0) GO TO 320
+C
+         SV(J) = -SV(J)
+C
+         IF (WANTB) B(J) = -B(J)
+         IF (.NOT.WANTY) GO TO 320
+         DO 300 I=1,LY
+            Y(I,J) = -Y(I,J)
+  300    CONTINUE
+C
+  320 CONTINUE
+C
+C     NOW SORT THE SINGULAR VALUES INTO DESCENDING ORDER.
+C
+      IF (WANTZ) JJ = 0
+      DO 400 J=K,N
+         S = 0.0D0
+         L = J
+C
+         DO 340 I=J,N
+            IF (SV(I).LE.S) GO TO 340
+            S = SV(I)
+            L = I
+  340    CONTINUE
+C
+         IF (S.EQ.0.0D0) GO TO 420
+         IF (WANTZ) WORK2(J) = L
+         IF (L.EQ.J) GO TO 400
+         IF (WANTZ) JJ = J
+C
+         SV(L) = SV(J)
+         SV(J) = S
+         IF (.NOT.WANTY) GO TO 380
+C
+         DO 360 I=1,LY
+            T = Y(I,J)
+            Y(I,J) = Y(I,L)
+            Y(I,L) = T
+  360    CONTINUE
+C
+  380    IF (.NOT.WANTB) GO TO 400
+         T = B(J)
+         B(J) = B(L)
+         B(L) = T
+C
+  400 CONTINUE
+C
+  420 IF (.NOT.WANTZ) GO TO 480
+      IF (JJ.EQ.0) GO TO 480
+      DO 460 I=1,NCZ
+         DO 440 J=K,JJ
+            L = WORK2(J)
+            IF (J.EQ.L) GO TO 440
+            T = Z(J,I)
+            Z(J,I) = Z(L,I)
+            Z(L,I) = T
+  440    CONTINUE
+  460 CONTINUE
+C
+  480 IF (IFAIL.EQ.0) RETURN
+C
+      IFAIL = IFAIL + 1
+  500 IFAIL = P01AAF(IERR,IFAIL,SRNAME)
+      RETURN
+      END
+      SUBROUTINE F02SZZ(N, C, S, X)
+C     MARK 8 RELEASE. NAG COPYRIGHT 1979.
+C     WRITTEN BY S. HAMMARLING, MIDDLESEX POLYTECHNIC (PLRT10)
+C
+C     F02SZZ RETURNS THE N ELEMENT VECTOR
+C
+C     Y = R(N-1,N)*R(N-2,N-1)*...*R(1,2)*X ,
+C
+C     WHERE X IS AN N ELEMENT VECTOR AND R(J-1,J) IS A PLANE
+C     ROTATION FOR THE (J-1,J)-PLANE.
+C
+C     Y IS OVERWRITTEN ON X.
+C
+C     THE N ELEMENT VECTORS C AND S MUST BE SUCH THAT THE
+C     NON-IDENTITY PART OF R(J-1,J) IS GIVEN BY
+C
+C     R(J-1,J) = (  C(J)  S(J) ) .
+C                ( -S(J)  C(J) )
+C
+C     C(1) AND S(1) ARE NOT REFERENCED.
+C
+C     .. SCALAR ARGUMENTS ..
+      INTEGER N
+C     .. ARRAY ARGUMENTS ..
+      DOUBLE PRECISION C(N), S(N), X(N)
+C     ..
+C     .. LOCAL SCALARS ..
+      DOUBLE PRECISION W
+      INTEGER I
+C     ..
+C
+C     N MUST BE AT LEAST 1. IF N=1 THEN AN IMMEDIATE RETURN TO
+C     THE CALLING PROGRAM IS MADE.
+C
+      IF (N.EQ.1) RETURN
+C
+      DO 20 I=2,N
+         W = X(I-1)
+         X(I-1) = C(I)*W + S(I)*X(I)
+         X(I) = C(I)*X(I) - S(I)*W
+   20 CONTINUE
+C
+      RETURN
+      END
+      SUBROUTINE F02AMF(N, ACHEPS, D, E, Z, IZ, IFAIL)
+C     MARK 2 RELEASE. NAG COPYRIGHT 1972
+C     MARK 3 REVISED.
+C     MARK 4 REVISED.
+C     MARK 4.5 REVISED
+C     MARK 9 REVISED. IER-326 (SEP 1981).
+C
+C     TQL2
+C     THIS SUBROUTINE FINDS THE EIGENVALUES AND EIGENVECTORS OF A
+C     TRIDIAGONAL MATRIX, T, GIVEN WITH ITS DIAGONAL ELEMENTS IN
+C     THE ARRAY D(N) AND ITS SUB-DIAGONAL ELEMENTS IN THE LAST N
+C     - 1 STORES OF THE ARRAY E(N), USING QL TRANSFORMATIONS. THE
+C     EIGENVALUES ARE OVERWRITTEN ON THE DIAGONAL ELEMENTS IN THE
+C     ARRAY D IN ASCENDING ORDER. THE EIGENVECTORS ARE FORMED IN
+C     THE ARRAY Z(N,N), OVERWRITING THE ACCUMULATED
+C     TRANSFORMATIONS AS SUPPLIED BY THE SUBROUTINE F01AJF. THE
+C     SUBROUTINE WILL FAIL IF ALL EIGENVALUES TAKE MORE THAN 30*N
+C     ITERATIONS.
+C     1ST APRIL 1972
+C
+      INTEGER P01AAF, ISAVE, IFAIL, N, I, L, J, M, I1, M1, II, K, IZ
+C$P 1
+      DOUBLE PRECISION SRNAME
+      DOUBLE PRECISION B, F, H, ACHEPS, G, P, R, C, S, D(N), E(N),
+     * Z(IZ,N)
+      DATA SRNAME /8H F02AMF /
+      ISAVE = IFAIL
+      IF (N.EQ.1) GO TO 40
+      DO 20 I=2,N
+         E(I-1) = E(I)
+   20 CONTINUE
+   40 E(N) = 0.0D0
+      B = 0.0D0
+      F = 0.0D0
+      J = 30*N
+      DO 300 L=1,N
+         H = ACHEPS*(ABS(D(L))+ABS(E(L)))
+         IF (B.LT.H) B = H
+C     LOOK FOR SMALL SUB-DIAG ELEMENT
+         DO 60 M=L,N
+            IF (ABS(E(M)).LE.B) GO TO 80
+   60    CONTINUE
+   80    IF (M.EQ.L) GO TO 280
+  100    IF (J.LE.0) GO TO 400
+         J = J - 1
+C     FORM SHIFT
+         G = D(L)
+         H = D(L+1) - G
+         IF (ABS(H).GE.ABS(E(L))) GO TO 120
+         P = H*0.5D0/E(L)
+         R = SQRT(P*P+1.0D0)
+         H = P + R
+         IF (P.LT.0.0D0) H = P - R
+         D(L) = E(L)/H
+         GO TO 140
+  120    P = 2.0D0*E(L)/H
+         R = SQRT(P*P+1.0D0)
+         D(L) = E(L)*P/(1.0D0+R)
+  140    H = G - D(L)
+         I1 = L + 1
+         IF (I1.GT.N) GO TO 180
+         DO 160 I=I1,N
+            D(I) = D(I) - H
+  160    CONTINUE
+  180    F = F + H
+C     QL TRANSFORMATION
+         P = D(M)
+         C = 1.0D0
+         S = 0.0D0
+         M1 = M - 1
+         DO 260 II=L,M1
+            I = M1 - II + L
+            G = C*E(I)
+            H = C*P
+            IF (ABS(P).LT.ABS(E(I))) GO TO 200
+            C = E(I)/P
+            R = SQRT(C*C+1.0D0)
+            E(I+1) = S*P*R
+            S = C/R
+            C = 1.0D0/R
+            GO TO 220
+  200       C = P/E(I)
+            R = SQRT(C*C+1.0D0)
+            E(I+1) = S*E(I)*R
+            S = 1.0D0/R
+            C = C/R
+  220       P = C*D(I) - S*G
+            D(I+1) = H + S*(C*G+S*D(I))
+C     FORM VECTOR
+            DO 240 K=1,N
+               H = Z(K,I+1)
+               Z(K,I+1) = S*Z(K,I) + C*H
+               Z(K,I) = C*Z(K,I) - S*H
+  240       CONTINUE
+  260    CONTINUE
+         E(L) = S*P
+         D(L) = C*P
+         IF (ABS(E(L)).GT.B) GO TO 100
+  280    D(L) = D(L) + F
+  300 CONTINUE
+C     ORDER EIGENVALUES AND EIGENVECTORS
+      DO 380 I=1,N
+         K = I
+         P = D(I)
+         I1 = I + 1
+         IF (I1.GT.N) GO TO 340
+         DO 320 J=I1,N
+            IF (D(J).GE.P) GO TO 320
+            K = J
+            P = D(J)
+  320    CONTINUE
+  340    IF (K.EQ.I) GO TO 380
+         D(K) = D(I)
+         D(I) = P
+         DO 360 J=1,N
+            P = Z(J,I)
+            Z(J,I) = Z(J,K)
+            Z(J,K) = P
+  360    CONTINUE
+  380 CONTINUE
+      IFAIL = 0
+      RETURN
+  400 IFAIL = P01AAF(ISAVE,1,SRNAME)
+      RETURN
+      END
+      SUBROUTINE F01AGZ(A, IA, N, B, C)
+C     MARK 11 RELEASE. NAG COPYRIGHT 1983.
+C
+C     COMPUTES  C = A*B  WHERE
+C     A IS A SYMMETRIC N-BY-N MATRIX,
+C     WHOSE LOWER TRIANGLE IS STORED IN A.
+C     C MUST BE DISTINCT FROM B.
+C
+C     .. SCALAR ARGUMENTS ..
+      INTEGER IA, N
+C     .. ARRAY ARGUMENTS ..
+      DOUBLE PRECISION A(IA,N), B(N), C(N)
+C     ..
+C     .. LOCAL SCALARS ..
+      DOUBLE PRECISION Y
+      INTEGER I, IP1, J, NM1
+C     ..
+C
+      DO 20 I=1,N
+         C(I) = 0.0D0
+   20 CONTINUE
+      IF (N.EQ.1) GO TO 100
+      NM1 = N - 1
+      DO 80 I=1,NM1
+         DO 40 J=I,N
+            C(J) = C(J) + A(J,I)*B(I)
+   40    CONTINUE
+         Y = C(I)
+         IP1 = I + 1
+         DO 60 J=IP1,N
+            Y = Y + A(J,I)*B(J)
+   60    CONTINUE
+         C(I) = Y
+   80 CONTINUE
+  100 C(N) = C(N) + A(N,N)*B(N)
+      RETURN
+      END
+      SUBROUTINE F01AJF(N, ATOL, A, IA, D, E, Z, IZ)
+C     MARK 2 RELEASE. NAG COPYRIGHT 1972
+C     MARK 4 REVISED.
+C     MARK 4.5 REVISED
+C     MARK 5C REVISED
+C     MARK 11 REVISED. VECTORISATION (JAN 1984).
+C
+C     TRED2
+C     THIS SUBROUTINE REDUCES THE GIVEN LOWER TRIANGLE OF A
+C     SYMMETRIC MATRIX, A, STORED IN THE ARRAY A(N,N), TO
+C     TRIDIAGONAL FORM USING HOUSEHOLDERS REDUCTION. THE DIAGONAL
+C     OF THE RESULT IS STORED IN THE ARRAY D(N) AND THE
+C     SUB-DIAGONAL IN THE LAST N - 1 STORES OF THE ARRAY E(N)
+C     (WITH THE ADDITIONAL ELEMENT E(1) = 0). THE TRANSFORMATION
+C     MATRICES ARE ACCUMULATED IN THE ARRAY Z(N,N). THE ARRAY
+C     A IS LEFT UNALTERED UNLESS THE ACTUAL PARAMETERS
+C     CORRESPONDING TO A AND Z ARE IDENTICAL.
+C     1ST AUGUST 1971
+C
+      INTEGER I, IA, II, IZ, J, K, L, N
+      DOUBLE PRECISION ATOL, F, G, H, HH, A(IA,N), D(N), E(N), Z(IZ,N)
+      DO 40 I=1,N
+         DO 20 J=I,N
+            Z(J,I) = A(J,I)
+   20    CONTINUE
+         D(I) = A(N,I)
+   40 CONTINUE
+      IF (N.EQ.1) GO TO 440
+      DO 260 II=2,N
+         I = N - II + 2
+         L = I - 2
+         F = D(I-1)
+         G = 0.0D0
+         IF (L.EQ.0) GO TO 80
+         DO 60 K=1,L
+            G = G + D(K)*D(K)
+   60    CONTINUE
+   80    H = G + F*F
+         L = L + 1
+C     IF G IS TOO SMALL FOR ORTHOGONALITY TO BE
+C     GUARANTEED THE TRANSFORMATION IS SKIPPED
+         IF (G.GT.ATOL) GO TO 100
+         E(I) = F
+         H = 0.0D0
+         DO 85 J=1,L
+            Z(J,I) = D(J)
+   85    CONTINUE
+         DO 90 J=1,L
+            Z(I,J) = 0.0D0
+            D(J) = Z(I-1,J)
+   90    CONTINUE
+         GO TO 240
+  100    G = SQRT(H)
+         IF (F.GE.0.0D0) G = -G
+         E(I) = G
+         H = H - F*G
+         D(I-1) = F - G
+C     COPY U
+         DO 110 J=1,L
+            Z(J,I) = D(J)
+  110    CONTINUE
+C     FORM A*U
+         CALL F01AGZ(Z, IZ, L, D, E)
+C     FORM P
+         DO 182 J=1,L
+            E(J) = E(J)/H
+  182    CONTINUE
+         F = 0.0D0
+         DO 185 J=1,L
+            F = F + E(J)*D(J)
+  185    CONTINUE
+C     FORM K
+         HH = F/(H+H)
+C     FORM Q
+         DO 190 J=1,L
+            E(J) = E(J) - HH*D(J)
+  190    CONTINUE
+C     FORM REDUCED A
+         DO 220 J=1,L
+            F = D(J)
+            G = E(J)
+            DO 200 K=J,L
+               Z(K,J) = (Z(K,J) - G*D(K)) - F*E(K)
+  200       CONTINUE
+            D(J) = Z(L,J)
+            Z(I,J) = 0.0D0
+  220    CONTINUE
+  240    D(I) = H
+  260 CONTINUE
+C     ACCUMULATION OF TRANSFORMATION MATRICES
+      DO 400 I=2,N
+         L = I - 1
+         Z(N,L) = Z(L,L)
+         Z(L,L) = 1.0D0
+         H = D(I)
+         IF (H.EQ.0.0D0) GO TO 360
+         DO 290 K=1,L
+            D(K) = 0.0D0
+  290    CONTINUE
+         CALL F01CKY(Z, IZ, L, L, Z(1,I), 1, D)
+         DO 310 K=1,L
+            D(K) = D(K)/H
+  310    CONTINUE
+         DO 340 J=1,L
+            DO 320 K=1,L
+               Z(K,J) = Z(K,J) - Z(K,I)*D(J)
+  320       CONTINUE
+  340    CONTINUE
+  360    DO 380 J=1,L
+            Z(J,I) = 0.0D0
+  380    CONTINUE
+  400 CONTINUE
+      DO 420 I=1,N
+         D(I) = Z(N,I)
+         Z(N,I) = 0.0D0
+  420 CONTINUE
+  440 Z(N,N) = 1.0D0
+      E(1) = 0.0D0
+      RETURN
+      END
+      SUBROUTINE F01CKY(A, IA, M, N, B, IB, C)
+C     MARK 11 RELEASE. NAG COPYRIGHT 1983.
+C
+C     COMPUTES  C = C +  (A**T)*B  WHERE
+C     A IS RECTANGULAR M BY N.
+C     C MUST BE DISTINCT FROM B.
+C     THE ELEMENTS OF B MAY BE NON-CONSECUTIVE, WITH OFFSET IB.
+C
+C     .. SCALAR ARGUMENTS ..
+      INTEGER IA, IB, M, N
+C     .. ARRAY ARGUMENTS ..
+      DOUBLE PRECISION A(IA,N), B(IB,M), C(N)
+C     ..
+C     .. LOCAL SCALARS ..
+      DOUBLE PRECISION X
+      INTEGER I, J
+C     ..
+C
+      DO 60 I=1,N
+         X = C(I)
+         DO 40 J=1,M
+            X = X + A(J,I)*B(1,J)
+   40    CONTINUE
+         C(I) = X
+   60 CONTINUE
+      RETURN
+      END
+      SUBROUTINE F01LZF(N, A, NRA, C, NRC, WANTB, B, WANTQ, WANTY,Y,
+     * NRY, LY, WANTZ, Z, NRZ, NCZ, D, E, WORK1, WORK2, IFAIL)
+C     MARK 8 RELEASE. NAG COPYRIGHT 1979.
+C     WRITTEN BY S. HAMMARLING, MIDDLESEX POLYTECHNIC (BIDIAG)
+C
+C     F01LZF RETURNS ALL OR PART OF THE FACTORIZATION OF THE
+C     N*N UPPER TRIANGULAR MATRIX A GIVEN BY
+C
+C     A = Q*C*(P**T) ,
+C
+C     WHERE Q AND P ARE N*N ORTHOGONAL MATRICES AND C IS AN
+C     N*N UPPER BIDIAGONAL MATRIX.
+C
+C     IF WANTB IS .TRUE. THEN B RETURNS (Q**T)*B.
+C     IF WANTY IS .TRUE. THEN Y RETURNS Y*Q.
+C     IF WANTZ IS .TRUE. THEN Z RETURNS (P**T)*Z.
+C
+C     INPUT PARAMETERS.
+C
+C     N     - ORDER OF THE MATRIX A.
+C
+C     A     - THE N*N UPPER TRIANGULAR MATRIX TO BE FACTORIZED. THE
+C             STRICTLY LOWER TRIANGULAR PART OF A IS NOT REFERENCED.
+C
+C     NRA   - ROW DIMENSION OF A AS DECLARED IN THE CALLING PROGRAM.
+C             NRA MUST BE AT LEAST N.
+C
+C     NRC   - ROW DIMENSION OF C AS DECLARED IN THE CALLING PROGRAM.
+C             NRC MUST BE AT LEAST N.
+C
+C     WANTB - MUST BE .TRUE. IF (Q**T)*B IS REQUIRED.
+C             IF WANTB IS .FALSE. THEN B IS NOT REFERENCED.
+C
+C     B     - AN N ELEMENT REAL VECTOR.
+C
+C     WANTQ - MUST BE .TRUE. IF DETAILS OF Q ARE TO BE
+C             STORED BELOW THE BIDIAGONAL PART OF C.
+C             IF WANTQ IS .FALSE. THEN THE LOWER TRIANGULAR
+C             PART OF C IS NOT REFERENCED.
+C
+C     WANTY - MUST BE .TRUE. IF Y*Q IS REQUIRED.
+C             IF WANTY IS .FALSE. THEN Y IS NOT REFERENCED.
+C
+C     Y     - AN LY*N REAL MATRIX.
+C
+C     NRY   - IF WANTY IS .TRUE. THEN NRY MUST BE THE ROW
+C             DIMENSION OF Y AS DECLARED IN THE CALLING
+C             PROGRAM AND MUST BE AT LEAST LY.
+C
+C     LY    - IF WANTY IS .TRUE. THEN LY MUST BE THE NUMBER
+C             OF ROWS OF Y AND MUST BE AT LEAST 1.
+C
+C     WANTZ - MUST BE .TRUE. IF (P**T)*Z IS REQUIRED.
+C             IF WANTZ IS .FALSE. THEN Z IS NOT REFERENCED.
+C
+C     Z     - AN N*NCZ REAL MATRIX.
+C
+C     NRZ   - IF WANTZ IS .TRUE. THEN NRZ MUST BE THE ROW
+C             DIMENSION OF Z AS DECLARED IN THE CALLING
+C             PROGRAM AND MUST BE AT LEAST N.
+C
+C     NCZ   - IF WANTZ IS .TRUE. THEN NCZ MUST BE THE
+C             NUMBER OF COLUMNS OF Z AND MUST BE AT LEAST
+C             1.
+C
+C     IFAIL - THE USUAL FAILURE PARAMETER. IF IN DOUBT SET
+C             IFAIL TO ZERO BEFORE CALLING THIS ROUTINE.
+C
+C     OUTPUT PARAMETERS.
+C
+C     C     - N*N MATRIX CONTAINING THE UPPER BIDIAGONAL MATRIX B.
+C             DETAILS OF P ARE STORED ABOVE THE BIDIAGONAL
+C             PART OF C. UNLESS WANTQ IS .TRUE. THE
+C             STRICTLY LOWER TRIANGULAR PART OF C IS NOT
+C             REFERENCED.
+C             THE ROUTINE MAY BE CALLED WITH C=A.
+C
+C     B     - IF WANTB IS .TRUE. THEN B WILL RETURN THE N ELEMENT
+C             VECTOR (Q**T)*B.
+C
+C     Y     - IF WANTY IS .TRUE. THEN Y WILL RETURN THE
+C             LY*N MATRIX Y*Q.
+C
+C     Z     - IF WANTZ IS .TRUE. THEN Z WILL RETURN THE N*NCZ MATRIX
+C             (P**T)*Z.
+C
+C     D     - N ELEMENT VECTOR CONTAINING THE DIAGONAL ELEMENTS OF C
+C             SUCH THAT D(I)=C(I,I), I=1,2,...,N.
+C
+C     E     - N ELEMENT VECTOR CONTAINING THE
+C             SUPER-DIAGONAL ELEMENTS OF C SUCH THAT
+C             E(I)=C(I-1,I), I=2,3,...,N. E(1) IS NOT
+C             REFERENCED.
+C
+C     IFAIL - ON NORMAL RETURN IFAIL WILL BE ZERO.
+C             IF AN INPUT PARAMETER IS INCORRECTLY SUPPLIED
+C             THEN IFAIL IS SET TO UNITY. NO OTHER FAILURE
+C             IS POSSIBLE.
+C
+C     WORKSPACE PARAMETERS.
+C
+C     WORK1
+C     WORK2 - N ELEMENT REAL VECTORS.
+C             IF WANTZ IS .FALSE. THEN WORK1 AND WORK2 ARE NOT
+C             REFERENCED.
+C
+C     .. SCALAR ARGUMENTS ..
+      INTEGER IFAIL, LY, N, NCZ, NRA, NRC, NRY, NRZ
+      LOGICAL WANTB, WANTQ, WANTY, WANTZ
+C     .. ARRAY ARGUMENTS ..
+      DOUBLE PRECISION A(NRA,N), B(N), C(NRC,N), D(N), E(N), WORK1(N),
+     *WORK2(N), Y(NRY,N), Z(NRZ,NCZ)
+C     ..
+C     .. LOCAL SCALARS ..
+C$P 1
+      DOUBLE PRECISION SRNAME
+      DOUBLE PRECISION BIG, CS, EPS, RSQTPS, SMALL, SN, SQTEPS, T, W, X
+      INTEGER I, IERR, J, JJ, JP1, K, KP1, KP2, NM2
+C     .. FUNCTION REFERENCES ..
+!      DOUBLE PRECISION F01LZZ, SQRT, X02AAF, X02AGF
+      DOUBLE PRECISION F01LZZ, X02AAF, X02AGF
+      INTEGER P01AAF
+C     .. SUBROUTINE REFERENCES ..
+C     F01LZW, F01LZX, F01LZY
+C     ..
+      DATA SRNAME /8H F01LZF /
+      IERR = IFAIL
+      IF (IERR.EQ.0) IFAIL = 1
+C
+      IF (NRA.LT.N .OR. NRC.LT.N .OR. N.LT.1) GO TO 220
+      IF (WANTY .AND. (NRY.LT.LY .OR. LY.LT.1)) GO TO 220
+      IF (WANTZ .AND. (NRZ.LT.N .OR. NCZ.LT.1)) GO TO 220
+C
+      SMALL = X02AGF(0.0D0)
+      BIG = 1.0D0/SMALL
+      EPS = X02AAF(0.0D0)
+      SQTEPS = SQRT(EPS)
+      RSQTPS = 1.0D0/SQTEPS
+C
+      D(1) = A(1,1)
+C
+      DO 40 J=1,N
+         DO 20 I=1,J
+            C(I,J) = A(I,J)
+   20    CONTINUE
+   40 CONTINUE
+C
+      IFAIL = 0
+      IF (N.EQ.1) RETURN
+      IF (N.EQ.2) GO TO 200
+C
+C     START MAIN LOOP. K(TH) STEP PUTS ZEROS INTO K(TH) ROW OF C.
+C
+      NM2 = N - 2
+      DO 180 K=1,NM2
+         KP1 = K + 1
+C
+C     SET UP PLANE ROTATION P(J,J+1) TO ANNIHILATE C(K,J+1).
+C     THIS ROTATION INTRODUCES AN UNWANTED ELEMENT IN C(J+1,J)
+C     WHICH IS STORED IN X.
+C     J GOES N-1,N-2,...,K+1.
+C
+         J = N
+         DO 100 JJ=K,NM2
+            JP1 = J
+            J = J - 1
+            W = C(K,JP1)
+C
+            T = F01LZZ(C(K,J),W,SMALL,BIG)
+C
+            C(K,JP1) = T
+            X = 0.0D0
+C
+            CALL F01LZW(T, CS, SN, SQTEPS, RSQTPS, BIG)
+C
+            IF (.NOT.WANTZ) GO TO 60
+            WORK1(J) = CS
+            WORK2(J) = SN
+C
+   60       IF (T.EQ.0.0D0) GO TO 80
+            C(K,J) = CS*C(K,J) + SN*W
+C
+C     NOW APPLY THE TRANSFORMATION P(J,J+1).
+C
+            CALL F01LZY(J-K, CS, SN, C(KP1,J), C(KP1,JP1))
+C
+            X = SN*C(JP1,JP1)
+            C(JP1,JP1) = CS*C(JP1,JP1)
+C
+C     NOW SET UP PLANE ROTATION Q(J,J+1)**T TO ANNIHILATE
+C     X=C(J+1,J).
+C
+   80       T = F01LZZ(C(J,J),X,SMALL,BIG)
+C
+            IF (WANTQ) C(JP1,K) = T
+C
+            CALL F01LZW(T, D(J), E(J), SQTEPS, RSQTPS, BIG)
+C
+            C(J,J) = D(J)*C(J,J) + E(J)*X
+C
+            IF (WANTY) CALL F01LZY(LY, D(J), E(J), Y(1,J), Y(1,JP1))
+C
+  100    CONTINUE
+C
+C     NOW APPLY THE TRANSFORMATIONS Q(J,J+1)**T AND FORM
+C     (P(J,J+1)**T)*Z, J=N-1,N-2,...,K+1 COLUMN BY COLUMN
+C
+         KP2 = KP1 + 1
+         DO 120 J=KP2,N
+C
+            CALL F01LZX(J-K, D(K), E(K), C(KP1,J))
+C
+  120    CONTINUE
+C
+         IF (WANTB) CALL F01LZX(N-K, D(K), E(K), B(KP1))
+C
+         IF (.NOT.WANTZ) GO TO 160
+         DO 140 J=1,NCZ
+C
+            CALL F01LZX(N-K, WORK1(K), WORK2(K), Z(KP1,J))
+C
+  140    CONTINUE
+C
+  160    D(KP1) = C(KP1,KP1)
+         E(KP1) = C(K,KP1)
+C
+  180 CONTINUE
+C
+  200 D(N) = C(N,N)
+      E(N) = C(N-1,N)
+      RETURN
+C
+  220 IFAIL = P01AAF(IERR,IFAIL,SRNAME)
+      RETURN
+      END
+      SUBROUTINE F01LZW(T, C, S, SQTEPS, RSQTPS, BIG)
+C     MARK 8 RELEASE. NAG COPYRIGHT 1979.
+C     WRITTEN BY S. HAMMARLING, MIDDLESEX POLYTECHNIC (COSSIN)
+C
+C     F01LZW RETURNS THE VALUES
+C
+C     C = COS(THETA)   AND   S = SIN(THETA)
+C
+C     FOR A GIVEN VALUE OF
+C
+C     T = TAN(THETA) .
+C
+C     C IS ALWAYS NON-NEGATIVE AND S HAS THE SAME SIGN AS T.
+C
+C     SQTEPS, RSQTPS AND BIG MUST BE SUCH THAT
+C
+C     SQTEPS = SQRT(X02AAF) , RSQTPS = 1.0/SQTEPS AND BIG =
+C     1.0/X02AGF ,
+C
+C     WHERE X02AAF AND X02AGF ARE THE NUMBERS RETURNED FROM
+C     ROUTINES X02AAF AND X02AGF RESPECTIVELY.
+C
+C     .. SCALAR ARGUMENTS ..
+      DOUBLE PRECISION BIG, C, RSQTPS, S, SQTEPS, T
+C     ..
+C     .. LOCAL SCALARS ..
+      DOUBLE PRECISION ABST, TT
+C     .. FUNCTION REFERENCES ..
+!      DOUBLE PRECISION SQRT
+C     ..
+      IF (T.NE.0.0D0) GO TO 20
+      C = 1.0D0
+      S = 0.0D0
+      RETURN
+C
+   20 ABST = ABS(T)
+      IF (ABST.LT.SQTEPS) GO TO 60
+      IF (ABST.GT.RSQTPS) GO TO 80
+C
+      TT = ABST*ABST
+      IF (ABST.GT.1.0D0) GO TO 40
+C
+      TT = 0.25D0*TT
+      C = 0.5D0/SQRT(0.25D0+TT)
+      S = C*T
+      RETURN
+C
+   40 TT = 0.25D0/TT
+      S = 0.5D0/SQRT(0.25D0+TT)
+      C = S/ABST
+      S = SIGN(S,T)
+      RETURN
+C
+   60 C = 1.0D0
+      S = T
+      RETURN
+C
+   80 C = 0.0D0
+      IF (ABST.LT.BIG) C = 1.0D0/ABST
+      S = SIGN(1.0D0,T)
+      RETURN
+      END
+      SUBROUTINE F01LZX(N, C, S, X)
+C     MARK 8 RELEASE. NAG COPYRIGHT 1979.
+C     WRITTEN BY S. HAMMARLING, MIDDLESEX POLYTECHNIC (PLROT6)
+C
+C     F01LZX RETURNS THE N ELEMENT VECTOR
+C
+C     Y = R(1,2)*R(2,3)*...*R(N-1,N)*X ,
+C
+C     WHERE X IS AN N ELEMENT VECTOR AND R(J-1,J) IS A PLANE
+C     ROTATION FOR THE (J-1,J)-PLANE.
+C
+C     Y IS OVERWRITTEN ON X.
+C
+C     THE N ELEMENT VECTORS C AND S MUST BE SUCH THAT THE
+C     NON-IDENTITY PART OF R(J-1,J) IS GIVEN BY
+C
+C     R(J-1,J) = (  C(J)  S(J) ) .
+C                ( -S(J)  C(J) )
+C
+C     C(1) AND S(1) ARE NOT REFERENCED.
+C
+C     .. SCALAR ARGUMENTS ..
+      INTEGER N
+C     .. ARRAY ARGUMENTS ..
+      DOUBLE PRECISION C(N), S(N), X(N)
+C     ..
+C     .. LOCAL SCALARS ..
+      DOUBLE PRECISION W
+      INTEGER I, II, IM1
+C     ..
+C
+C     N MUST BE AT LEAST 1. IF N=1 THEN AN IMMEDIATE RETURN TO
+C     THE CALLING PROGRAM IS MADE.
+C
+      IF (N.EQ.1) RETURN
+C
+      I = N
+      DO 20 II=2,N
+         IM1 = I - 1
+         W = X(IM1)
+         X(IM1) = C(I)*W + S(I)*X(I)
+         X(I) = C(I)*X(I) - S(I)*W
+         I = IM1
+   20 CONTINUE
+C
+      RETURN
+      END
+      SUBROUTINE F01LZY(N, C, S, X, Y)
+C     MARK 8 RELEASE. NAG COPYRIGHT 1979.
+C     WRITTEN BY S. HAMMARLING, MIDDLESEX POLYTECHNIC (PLROT8)
+C
+C     F01LZY FORMS THE N*2 MATRIX
+C
+C     Z = ( X  Y )*( C  -S ) ,
+C                  ( S   C )
+C
+C     WHERE X AND Y ARE N ELEMENT VECTORS, C=COS(THETA) AND
+C     S=SIN(THETA).
+C
+C     THE FIRST COLUMN OF Z IS OVERWRITTEN ON X AND THE SECOND
+C     COLUMN OF Z IS OVERWRITTEN ON Y.
+C
+C     .. SCALAR ARGUMENTS ..
+      DOUBLE PRECISION C, S
+      INTEGER N
+C     .. ARRAY ARGUMENTS ..
+      DOUBLE PRECISION X(N), Y(N)
+C     ..
+C     .. LOCAL SCALARS ..
+      DOUBLE PRECISION W
+      INTEGER I
+C     ..
+C
+C     N MUST BE AT LEAST 1.
+C
+      DO 20 I=1,N
+         W = X(I)
+         X(I) = C*W + S*Y(I)
+         Y(I) = C*Y(I) - S*W
+   20 CONTINUE
+C
+      RETURN
+      END
+      FUNCTION F01LZZ(A, B, SMALL, BIG)
+C     MARK 8 RELEASE. NAG COPYRIGHT 1979.
+C     WRITTEN BY S. HAMMARLING, MIDDLESEX POLYTECHNIC (TANGNT)
+C
+C     F01LZZ RETURNS THE VALUE
+C
+C     F01LZZ = B/A .
+C
+C     SMALL AND BIG MUST BE SUCH THAT
+C
+C     SMALL = X02AGF     AND     BIG = 1.0/SMALL ,
+C
+C     WHERE X02AGF IS THE SMALL NUMBER RETURNED FROM ROUTINE
+C     X02AGF.
+C
+C     IF B/A IS LESS THAN SMALL THEN F01LZZ IS RETURNED AS
+C     ZERO AND IF B/A IS GREATER THAN BIG THEN F01LZZ IS
+C     RETURNED AS SIGN(BIG,B).
+C
+C     .. SCALAR ARGUMENTS ..
+      DOUBLE PRECISION F01LZZ, A, B, BIG, SMALL
+C     ..
+C     .. LOCAL SCALARS ..
+      DOUBLE PRECISION ABSA, ABSB, X
+C     ..
+      F01LZZ = 0.0D0
+      IF (B.EQ.0.0D0) RETURN
+C
+      ABSA = ABS(A)
+      ABSB = ABS(B)
+      X = 0.0D0
+      IF (ABSA.GE.1.0D0) X = ABSA*SMALL
+C
+      IF (ABSB.LT.X) RETURN
+C
+      X = 0.0D0
+      IF (ABSB.GE.1.0D0) X = ABSB*SMALL
+C
+      IF (ABSA.LE.X) GO TO 20
+C
+      F01LZZ = B/A
+      RETURN
+C
+   20 F01LZZ = SIGN(BIG,B)
+      RETURN
+      END
+      SUBROUTINE F01YAH(N, CONST, X, INCX)
+C     MARK 11 RELEASE. NAG COPYRIGHT 1983.
+C
+C  F01YAH PERFORMS THE OPERATION
+C
+C     X = CONST*E,   E**T = ( 1  1 ... 1 ).
+C
+C  NAG FORTRAN 66 BASIC LINEAR ALGEBRA ROUTINE. ( SCNSV . )
+C
+C  -- WRITTEN ON 22-SEPTEMBER-1983.  S.J.HAMMARLING.
+C
+C     .. SCALAR ARGUMENTS ..
+      DOUBLE PRECISION CONST
+      INTEGER INCX, N
+C     .. ARRAY ARGUMENTS ..
+      DOUBLE PRECISION X(1)
+C     ..
+C     .. LOCAL SCALARS ..
+      DOUBLE PRECISION ZERO
+      INTEGER IX, LX
+C     ..
+      DATA ZERO /0.0D+0/
+C
+      IF (N.LT.1) RETURN
+C
+      IF (CONST.EQ.ZERO) GO TO 40
+      LX = 1 + (N-1)*INCX
+      DO 20 IX=1,LX,INCX
+         X(IX) = CONST
+   20 CONTINUE
+      GO TO 80
+   40 CONTINUE
+      LX = 1 + (N-1)*INCX
+      DO 60 IX=1,LX,INCX
+         X(IX) = ZERO
+   60 CONTINUE
+   80 CONTINUE
+C
+      RETURN
+C
+C  END OF F01YAH.
+C
+      END
+      SUBROUTINE F01YAJ(N, X, INCX)
+C     MARK 11 RELEASE. NAG COPYRIGHT 1983.
+C
+C  F01YAJ PERFORMS THE OPERATION
+C
+C     X = -X
+C
+C  NAG FORTRAN 66 BASIC LINEAR ALGEBRA ROUTINE. ( SNEGV . )
+C
+C  -- WRITTEN ON 22-SEPTEMBER-1983.  S.J.HAMMARLING.
+C
+C     .. SCALAR ARGUMENTS ..
+      INTEGER INCX, N
+C     .. ARRAY ARGUMENTS ..
+      DOUBLE PRECISION X(1)
+C     ..
+C     .. LOCAL SCALARS ..
+      INTEGER IX, LX
+C     ..
+C
+      IF (N.LT.1) RETURN
+C
+      LX = 1 + (N-1)*INCX
+      DO 20 IX=1,LX,INCX
+         X(IX) = -X(IX)
+   20 CONTINUE
+C
+      RETURN
+C
+C  END OF F01YAJ.
+C
+      END
+      SUBROUTINE F01YAL(N, ALPHA, X, INCX, Y, INCY)
+C     MARK 11 RELEASE. NAG COPYRIGHT 1983.
+C
+C
+C  F01YAL PERFORMS THE OPERATION
+C
+C     Y = ALPHA*X
+C
+C  NAG FORTRAN 66 BASIC LINEAR ALGEBRA ROUTINE. ( SSCMV . )
+C
+C  -- WRITTEN ON 22-SEPT-1983.  S.J.HAMMARLING.
+C
+C     .. SCALAR ARGUMENTS ..
+      DOUBLE PRECISION ALPHA
+      INTEGER INCX, INCY, N
+C     .. ARRAY ARGUMENTS ..
+      DOUBLE PRECISION X(1), Y(1)
+C     ..
+C     .. ARRAYS IN COMMON ..
+      DOUBLE PRECISION WMACH(15)
+C     ..
+C     .. LOCAL SCALARS ..
+      DOUBLE PRECISION ONE, TNY, ZERO
+      INTEGER I, IX, IY, LX
+C     .. SUBROUTINE REFERENCES ..
+C     F01YAH
+C     ..
+      COMMON /AX02ZA/ WMACH
+      DATA ONE /1.0D+0/, ZERO /0.0D+0/
+C
+      IF (N.LT.1) RETURN
+      IF (ALPHA.NE.ZERO) GO TO 20
+C
+      CALL F01YAH(N, ZERO, Y, ABS(INCY))
+C
+      RETURN
+   20 CONTINUE
+C
+      IF (WMACH(9).NE.ZERO .AND. ABS(ALPHA).LT.ONE) GO TO 220
+      IF (INCX.NE.INCY .OR. INCX.LE.0) GO TO 60
+      LX = 1 + (N-1)*INCX
+      DO 40 IX=1,LX,INCX
+         Y(IX) = ALPHA*X(IX)
+   40 CONTINUE
+      GO TO 200
+   60 CONTINUE
+      IF (INCY.LT.0) GO TO 80
+      IY = 1
+      GO TO 100
+   80 CONTINUE
+      IY = 1 - (N-1)*INCY
+  100 CONTINUE
+      IF (INCX.LE.0) GO TO 140
+      LX = 1 + (N-1)*INCX
+      DO 120 IX=1,LX,INCX
+         Y(IY) = ALPHA*X(IX)
+         IY = IY + INCY
+  120 CONTINUE
+      GO TO 180
+  140 CONTINUE
+      IX = 1 - (N-1)*INCX
+      DO 160 I=1,N
+         Y(IY) = ALPHA*X(IX)
+         IX = IX + INCX
+         IY = IY + INCY
+  160 CONTINUE
+  180 CONTINUE
+  200 CONTINUE
+      GO TO 480
+  220 CONTINUE
+      TNY = WMACH(5)/ABS(ALPHA)
+      IF (INCX.NE.INCY .OR. INCX.LE.0) GO TO 300
+      LX = 1 + (N-1)*INCX
+      DO 280 IX=1,LX,INCX
+         IF (ABS(X(IX)).LT.TNY) GO TO 240
+         Y(IX) = ALPHA*X(IX)
+         GO TO 260
+  240    CONTINUE
+         Y(IX) = ZERO
+  260    CONTINUE
+  280 CONTINUE
+      GO TO 460
+  300 CONTINUE
+      IF (INCX.LT.0) GO TO 320
+      IX = 1
+      GO TO 340
+  320 CONTINUE
+      IX = 1 - (N-1)*INCX
+  340 CONTINUE
+      IF (INCY.LT.0) GO TO 360
+      IY = 1
+      GO TO 380
+  360 CONTINUE
+      IY = 1 - (N-1)*INCY
+  380 CONTINUE
+      DO 440 I=1,N
+         IF (ABS(X(IX)).LT.TNY) GO TO 400
+         Y(IY) = ALPHA*X(IX)
+         GO TO 420
+  400    CONTINUE
+         Y(IY) = ZERO
+  420    CONTINUE
+         IX = IX + INCX
+         IY = IY + INCY
+  440 CONTINUE
+  460 CONTINUE
+  480 CONTINUE
+C
+      RETURN
+C
+C  END OF F01YAL.
+C
+      END
+      SUBROUTINE F01YAM(N, X, INCX, Y, INCY)
+C     MARK 11 RELEASE. NAG COPYRIGHT 1983.
+C
+C  F01YAM PERFORMS THE OPERATIONS
+C
+C     TEMP = X,   X = Y,   Y = TEMP.
+C
+C  NAG FORTRAN 66 VERSION OF THE BLAS ROUTINE SSWAP .
+C
+C  THE ROUTINE IS PART OF THE NAG SET OF BASIC LINEAR ALGEBRA ROUTINES.
+C
+C  -- WRITTEN ON 26-NOVEMBER-1982.  S.J.HAMMARLING.
+C
+C     .. SCALAR ARGUMENTS ..
+      INTEGER INCX, INCY, N
+C     .. ARRAY ARGUMENTS ..
+      DOUBLE PRECISION X(1), Y(1)
+C     ..
+C     .. LOCAL SCALARS ..
+      DOUBLE PRECISION TEMP
+      INTEGER I, IX, IY, LY
+C     ..
+C
+      IF (N.LT.1) RETURN
+C
+      IF (INCX.NE.INCY .OR. INCY.LE.0) GO TO 40
+      LY = 1 + (N-1)*INCY
+      DO 20 IY=1,LY,INCY
+         TEMP = X(IY)
+         X(IY) = Y(IY)
+         Y(IY) = TEMP
+   20 CONTINUE
+      GO TO 180
+   40 CONTINUE
+      IF (INCX.LT.0) GO TO 60
+      IX = 1
+      GO TO 80
+   60 CONTINUE
+      IX = 1 - (N-1)*INCX
+   80 CONTINUE
+      IF (INCY.LE.0) GO TO 120
+      LY = 1 + (N-1)*INCY
+      DO 100 IY=1,LY,INCY
+         TEMP = X(IX)
+         X(IX) = Y(IY)
+         Y(IY) = TEMP
+         IX = IX + INCX
+  100 CONTINUE
+      GO TO 160
+  120 CONTINUE
+      IY = 1 - (N-1)*INCY
+      DO 140 I=1,N
+         TEMP = X(IX)
+         X(IX) = Y(IY)
+         Y(IY) = TEMP
+         IY = IY + INCY
+         IX = IX + INCX
+  140 CONTINUE
+  160 CONTINUE
+  180 CONTINUE
+C
+      RETURN
+C
+C  END OF F01YAM.
+C
+      END
+      SUBROUTINE F01YAP(N, ALPHA, X, INCX)
+C     MARK 11 RELEASE. NAG COPYRIGHT 1983.
+C
+C
+C  F01YAP PERFORMS THE OPERATION
+C
+C     X = ALPHA*X
+C
+C  NAG FORTRAN 66 VERSION OF THE BLAS ROUTINE SSCAL .
+C
+C  THE ROUTINE IS PART OF THE NAG SET OF BASIC LINEAR ALGEBRA ROUTINES.
+C
+C  -- WRITTEN ON 26-NOVEMBER-1982.  S.J.HAMMARLING.
+C
+C     .. SCALAR ARGUMENTS ..
+      DOUBLE PRECISION ALPHA
+      INTEGER INCX, N
+C     .. ARRAY ARGUMENTS ..
+      DOUBLE PRECISION X(1)
+C     ..
+C     .. ARRAYS IN COMMON ..
+      DOUBLE PRECISION WMACH(15)
+C     ..
+C     .. LOCAL SCALARS ..
+      DOUBLE PRECISION ONE, TNY, ZERO
+      INTEGER IX, LX
+C     ..
+      COMMON /AX02ZA/ WMACH
+      DATA ONE /1.0D+0/, ZERO /0.0D+0/
+C
+      IF (N.LT.1) RETURN
+C
+      IF (ALPHA.NE.ZERO) GO TO 40
+      LX = 1 + (N-1)*INCX
+      DO 20 IX=1,LX,INCX
+         X(IX) = ZERO
+   20 CONTINUE
+      GO TO 160
+   40 IF (WMACH(9).NE.ZERO .AND. ABS(ALPHA).LT.ONE) GO TO 80
+      LX = 1 + (N-1)*INCX
+      DO 60 IX=1,LX,INCX
+         X(IX) = ALPHA*X(IX)
+   60 CONTINUE
+      GO TO 160
+   80 CONTINUE
+      TNY = WMACH(5)/ABS(ALPHA)
+      LX = 1 + (N-1)*INCX
+      DO 140 IX=1,LX,INCX
+         IF (ABS(X(IX)).LT.TNY) GO TO 100
+         X(IX) = ALPHA*X(IX)
+         GO TO 120
+  100    CONTINUE
+         X(IX) = ZERO
+  120    CONTINUE
+  140 CONTINUE
+  160 CONTINUE
+C
+      RETURN
+C
+C  END OF F01YAP.
+C
+      END
+      FUNCTION F01YAV(N, X, INCX, Y, INCY)
+C     MARK 11 RELEASE. NAG COPYRIGHT 1983.
+C
+C
+C  F01YAV RETURNS THE VALUE
+C
+C     F01YAV = ( X**T )*Y
+C
+C  NAG FORTRAN 66 VERSION OF THE BLAS ROUTINE SDOT  .
+C
+C  THIS ROUTINE IS PART OF THE NAG SET OF BASIC LINEAR ALGEBRA ROUTINES.
+C
+C  -- WRITTEN ON 21-SEPT-1982.  S.J.HAMMARLING.
+C
+C     .. SCALAR ARGUMENTS ..
+      INTEGER INCX, INCY, N
+C     .. ARRAY ARGUMENTS ..
+      DOUBLE PRECISION X(1), Y(1)
+C     ..
+C     .. ARRAYS IN COMMON ..
+      DOUBLE PRECISION WMACH(15)
+C     ..
+C     .. LOCAL SCALARS ..
+      DOUBLE PRECISION F01YAV, ABSX, ONE, SUM, ZERO
+      INTEGER I, IX, IY, LX
+C     ..
+      COMMON /AX02ZA/ WMACH
+      DATA ONE /1.0D+0/, ZERO /0.0D+0/
+C
+      IF (N.GE.1) GO TO 20
+      F01YAV = ZERO
+      RETURN
+   20 CONTINUE
+C
+      SUM = ZERO
+      IF (WMACH(9).NE.ZERO) GO TO 220
+      IF (INCX.NE.INCY .OR. INCX.LE.0) GO TO 60
+      LX = 1 + (N-1)*INCX
+      DO 40 IX=1,LX,INCX
+         SUM = SUM + X(IX)*Y(IX)
+   40 CONTINUE
+      GO TO 200
+   60 CONTINUE
+      IF (INCY.LT.0) GO TO 80
+      IY = 1
+      GO TO 100
+   80 CONTINUE
+      IY = 1 - (N-1)*INCY
+  100 CONTINUE
+      IF (INCX.LE.0) GO TO 140
+      LX = 1 + (N-1)*INCX
+      DO 120 IX=1,LX,INCX
+         SUM = SUM + X(IX)*Y(IY)
+         IY = IY + INCY
+  120 CONTINUE
+      GO TO 180
+  140 CONTINUE
+      IX = 1 - (N-1)*INCX
+      DO 160 I=1,N
+         SUM = SUM + X(IX)*Y(IY)
+         IX = IX + INCX
+         IY = IY + INCY
+  160 CONTINUE
+  180 CONTINUE
+  200 CONTINUE
+      GO TO 500
+  220 IF (INCX.NE.INCY .OR. INCX.LE.0) GO TO 320
+      LX = 1 + (N-1)*INCX
+      DO 300 IX=1,LX,INCX
+         IF (X(IX).EQ.ZERO .OR. Y(IX).EQ.ZERO) GO TO 280
+         ABSX = ABS(X(IX))
+         IF (ABSX.GE.ONE) GO TO 240
+         IF (ABS(Y(IX)).GE.WMACH(5)/ABSX) SUM = SUM + X(IX)*Y(IX)
+         GO TO 260
+  240    CONTINUE
+         SUM = SUM + X(IX)*Y(IX)
+  260    CONTINUE
+  280    CONTINUE
+  300 CONTINUE
+      GO TO 500
+  320 CONTINUE
+      IF (INCX.LT.0) GO TO 340
+      IX = 1
+      GO TO 360
+  340 CONTINUE
+      IX = 1 - (N-1)*INCX
+  360 CONTINUE
+      IF (INCY.LT.0) GO TO 380
+      IY = 1
+      GO TO 400
+  380 CONTINUE
+      IY = 1 - (N-1)*INCY
+  400 CONTINUE
+      DO 480 I=1,N
+         IF (X(IX).EQ.ZERO .OR. Y(IY).EQ.ZERO) GO TO 460
+         ABSX = ABS(X(IX))
+         IF (ABSX.GE.ONE) GO TO 420
+         IF (ABS(Y(IY)).GE.WMACH(5)/ABSX) SUM = SUM + X(IX)*Y(IY)
+         GO TO 440
+  420    CONTINUE
+         SUM = SUM + X(IX)*Y(IY)
+  440    CONTINUE
+  460    CONTINUE
+         IX = IX + INCX
+         IY = IY + INCY
+  480 CONTINUE
+  500 CONTINUE
+C
+      F01YAV = SUM
+      RETURN
+C
+C  END OF F01YAV.
+C
+      END
+      SUBROUTINE F01YAX(N, X, INCX, Y, INCY)
+C     MARK 11 RELEASE. NAG COPYRIGHT 1983.
+C
+C  F01YAX PERFORMS THE OPERATION
+C
+C     Y = X
+C
+C  NAG FORTRAN 66 VERSION OF THE BLAS ROUTINE SCOPY .
+C
+C  THE ROUTINE IS PART OF THE NAG SET OF BASIC LINEAR ALGEBRA ROUTINES.
+C
+C  -- WRITTEN ON 26-NOVEMBER-1982.  S.J.HAMMARLING.
+C
+C     .. SCALAR ARGUMENTS ..
+      INTEGER INCX, INCY, N
+C     .. ARRAY ARGUMENTS ..
+      DOUBLE PRECISION X(1), Y(1)
+C     ..
+C     .. LOCAL SCALARS ..
+      INTEGER I, IX, IY, LY
+C     ..
+C
+      IF (N.LT.1) RETURN
+C
+      IF (INCX.NE.INCY .OR. INCY.LE.0) GO TO 40
+      LY = 1 + (N-1)*INCY
+      DO 20 IY=1,LY,INCY
+         Y(IY) = X(IY)
+   20 CONTINUE
+      GO TO 180
+   40 CONTINUE
+      IF (INCX.LT.0) GO TO 60
+      IX = 1
+      GO TO 80
+   60 CONTINUE
+      IX = 1 - (N-1)*INCX
+   80 CONTINUE
+      IF (INCY.LE.0) GO TO 120
+      LY = 1 + (N-1)*INCY
+      DO 100 IY=1,LY,INCY
+         Y(IY) = X(IX)
+         IX = IX + INCX
+  100 CONTINUE
+      GO TO 160
+  120 CONTINUE
+      IY = 1 - (N-1)*INCY
+      DO 140 I=1,N
+         Y(IY) = X(IX)
+         IY = IY + INCY
+         IX = IX + INCX
+  140 CONTINUE
+  160 CONTINUE
+  180 CONTINUE
+C
+      RETURN
+C
+C  END OF F01YAX.
+C
+      END
+      SUBROUTINE F01YAY(N, ALPHA, X, INCX, Y, INCY)
+C     MARK 11 RELEASE. NAG COPYRIGHT 1983.
+C
+C
+C  F01YAY PERFORMS THE OPERATION
+C
+C     Y = ALPHA*X + Y
+C
+C  NAG FORTRAN 66 VERSION OF THE BLAS ROUTINE SAXPY .
+C
+C  THIS ROUTINE IS PART OF THE NAG SET OF BASIC LINEAR ALGEBRA ROUTINES.
+C
+C  -- WRITTEN ON 3-SEPT-1982.  S.J.HAMMARLING.
+C
+C     .. SCALAR ARGUMENTS ..
+      DOUBLE PRECISION ALPHA
+      INTEGER INCX, INCY, N
+C     .. ARRAY ARGUMENTS ..
+      DOUBLE PRECISION X(1), Y(1)
+C     ..
+C     .. ARRAYS IN COMMON ..
+      DOUBLE PRECISION WMACH(15)
+C     ..
+C     .. LOCAL SCALARS ..
+      DOUBLE PRECISION ONE, TNY, ZERO
+      INTEGER I, IX, IY, LX
+C     ..
+      COMMON /AX02ZA/ WMACH
+      DATA ONE /1.0D+0/, ZERO /0.0D+0/
+C
+      IF (N.LT.1 .OR. ALPHA.EQ.ZERO) RETURN
+C
+      IF (WMACH(9).NE.ZERO .AND. ABS(ALPHA).LT.ONE) GO TO 200
+      IF (INCX.NE.INCY .OR. INCX.LE.0) GO TO 40
+      LX = 1 + (N-1)*INCX
+      DO 20 IX=1,LX,INCX
+         Y(IX) = ALPHA*X(IX) + Y(IX)
+   20 CONTINUE
+      GO TO 180
+   40 CONTINUE
+      IF (INCY.LT.0) GO TO 60
+      IY = 1
+      GO TO 80
+   60 CONTINUE
+      IY = 1 - (N-1)*INCY
+   80 CONTINUE
+      IF (INCX.LE.0) GO TO 120
+      LX = 1 + (N-1)*INCX
+      DO 100 IX=1,LX,INCX
+         Y(IY) = ALPHA*X(IX) + Y(IY)
+         IY = IY + INCY
+  100 CONTINUE
+      GO TO 160
+  120 CONTINUE
+      IX = 1 - (N-1)*INCX
+      DO 140 I=1,N
+         Y(IY) = ALPHA*X(IX) + Y(IY)
+         IX = IX + INCX
+         IY = IY + INCY
+  140 CONTINUE
+  160 CONTINUE
+  180 CONTINUE
+      GO TO 380
+  200 CONTINUE
+      TNY = WMACH(5)/ABS(ALPHA)
+      IF (INCX.NE.INCY .OR. INCX.LE.0) GO TO 240
+      LX = 1 + (N-1)*INCX
+      DO 220 IX=1,LX,INCX
+         IF (ABS(X(IX)).GE.TNY) Y(IX) = ALPHA*X(IX) + Y(IX)
+  220 CONTINUE
+      GO TO 360
+  240 CONTINUE
+      IF (INCX.LT.0) GO TO 260
+      IX = 1
+      GO TO 280
+  260 CONTINUE
+      IX = 1 - (N-1)*INCX
+  280 CONTINUE
+      IF (INCY.LT.0) GO TO 300
+      IY = 1
+      GO TO 320
+  300 CONTINUE
+      IY = 1 - (N-1)*INCY
+  320 CONTINUE
+      DO 340 I=1,N
+         IF (ABS(X(IX)).GE.TNY) Y(IY) = ALPHA*X(IX) + Y(IY)
+         IX = IX + INCX
+         IY = IY + INCY
+  340 CONTINUE
+  360 CONTINUE
+  380 CONTINUE
+C
+      RETURN
+C
+C  END OF F01YAY.
+C
+      END
+      INTEGER FUNCTION P01AAF(IFAIL, ERROR, SRNAME)
+C     MARK 1 RELEASE.  NAG COPYRIGHT 1971
+C     MARK 3 REVISED
+C     MARK 4A REVISED, IER-45
+C     MARK 4.5 REVISED
+C     MARK 7 REVISED (DEC 1978)
+C     MARK 11 REVISED (FEB 1984)
+C     RETURNS THE VALUE OF ERROR OR TERMINATES THE PROGRAM.
+      INTEGER ERROR, IFAIL, NOUT
+C$P 1
+      DOUBLE PRECISION SRNAME
+C     TEST IF NO ERROR DETECTED
+      IF (ERROR.EQ.0) GO TO 20
+C     DETERMINE OUTPUT UNIT FOR MESSAGE
+      CALL X04AAF (0,NOUT)
+C     TEST FOR SOFT FAILURE
+      IF (MOD(IFAIL,10).EQ.1) GO TO 10
+C     HARD FAILURE
+      WRITE (NOUT,99999) SRNAME, ERROR
+C     ******************** IMPLEMENTATION NOTE ********************
+C     THE FOLLOWING STOP STATEMENT MAY BE REPLACED BY A CALL TO AN
+C     IMPLEMENTATION-DEPENDENT ROUTINE TO DISPLAY A MESSAGE AND/OR
+C     ABORT THE PROGRAM.
+C     *************************************************************
+      STOP
+C     SOFT FAIL
+C     TEST IF ERROR MESSAGES SUPPRESSED
+   10 IF (MOD(IFAIL/10,10).EQ.0) GO TO 20
+      WRITE (NOUT,99999) SRNAME, ERROR
+   20 P01AAF = ERROR
+      RETURN
+99999 FORMAT (1H0, 38HERROR DETECTED BY NAG LIBRARY ROUTINE , A8,
+     * 11H - IFAIL = , I5//)
+      END
+      FUNCTION X02AAF(X)
+C     NAG COPYRIGHT 1975
+C     MARK 4.5 RELEASE
+      DOUBLE PRECISION X
+C     * EPS *
+C
+C     IBM DOUBLE PRECISION VERSION
+C
+C     RETURNS THE VALUE EPS WHERE EPS IS THE SMALLEST
+C     POSITIVE
+C     NUMBER SUCH THAT 1.0 + EPS > 1.0
+C     THE X PARAMETER IS NOT USED
+C     FOR ICL 1900
+C     X02AAF = 2.0**(-37.0)
+C     FOR IBM 360/370
+C     X02AAF = 2.0D0**(-52.0D0)
+      DOUBLE PRECISION X02AAF
+C     DATA Z/Z3410000000000000/
+      X02AAF = 2.0D0**(-52.0D0)
+      RETURN
+      END
+      FUNCTION X02AGF(X)
+C     MARK 8 RELEASE. NAG COPYRIGHT 1980.
+C
+C     IBM DOUBLE PRECISION VERSION
+C
+C     IBM DOUBLE PRECISION VERSION
+C
+C     RETURNS THE SMALLEST POSITIVE FLOATING-POINT NUMBER  R
+C     EXACTLY REPRESENTABLE ON THE COMPUTER SUCH THAT  -R, 1.0/R,
+C     AND -1.0/R CAN ALL BE COMPUTED WITHOUT OVERFLOW OR UNDERFLOW.
+C     ON MANY MACHINES THE CORRECT VALUE CAN BE DERIVED FROM THOSE
+C     OF X02AAF, X02ABF AND X02ACF AS FOLLOWS
+C
+C     IF (X02ABF(X)*X02ACF(X).GE.1.0) X02AGF = X02ABF(X)
+C     IF (X02ABF(X)*X02ACF(X).LT.1.0)
+C    *                            X02AGF = (1.0+X02AAF(X))/X02ACF(X)
+C
+C     THE CORRECT VALUE SHOULD BE DEFINED AS A CONSTANT,
+C     POSSIBLY IN SOME BINARY, OCTAL OR HEXADECIMAL REPRESENTATION,
+C     AND INSERTED INTO THE ASSIGNMENT STATEMENT BELOW.
+C
+C     X IS A DUMMY ARGUMENT
+C
+C     .. SCALAR ARGUMENTS ..
+      DOUBLE PRECISION X02AGF, Z, X
+C     ..
+C     DATA Z/Z0210000000000001/
+      X02AGF = 1.0D-75
+      RETURN
+      END
+      INTEGER FUNCTION X02BAF(X)
+C     NAG COPYRIGHT 1975
+C     MARK 4.5 RELEASE
+      DOUBLE PRECISION X
+C     * BASE *
+C
+C     IBM DOUBLE PRECISION VERSION
+C
+C     RETURNS THE BASE OF THE ARITHMETIC USED ON THE COMPUTER
+C     THE X PARAMETER IS NOT USED
+C     FOR ICL 1900
+C     X02BAF = 2
+C     FOR IBM 360/370
+      X02BAF = 16
+      RETURN
+      END
+      LOGICAL FUNCTION X02DAF(X)
+C     MARK 8 RELEASE. NAG COPYRIGHT 1980.
+C
+C     RETURNS .FALSE. IF THE SYSTEM SETS UNDERFLOWING QUANTITIES
+C     TO ZERO, WITHOUT ANY ERROR INDICATION OR UNDESIRABLE WARNING
+C     OR SYSTEM OVERHEAD.
+C     RETURNS .TRUE. OTHERWISE, IN WHICH CASE CERTAIN LIBRARY
+C     ROUTINES WILL TAKE SPECIAL PRECAUTIONS TO AVOID UNDERFLOW
+C     (USUALLY AT SOME COST IN EFFICIENCY).
+C
+C     X IS A DUMMY ARGUMENT
+C
+C     .. SCALAR ARGUMENTS ..
+      DOUBLE PRECISION X
+C     ..
+      X02DAF = .FALSE.
+      RETURN
+      END
+      SUBROUTINE X02ZAZ
+C     MARK 11 RELEASE. NAG COPYRIGHT 1983.
+C
+C  NAG VERSION OF THE STANFORD ROUTINE MCHPAR.
+C
+C  X02ZAZ SETS MACHINE PARAMETERS AS FOLLOWS.
+C
+C     WMACH(  1 ) = BASE.
+C     WMACH(  2 ) = T. ( NUMBER OF BASE DIGITS OF PRECISION. )
+C                   WMACH( 2 ) MIGHT HOLD ( T - 1 ) ON A BINARY MACHINE
+C                   THAT TRUNCATES.
+C     WMACH(  3 ) = EPS.
+C     WMACH(  4 ) = SQRT( EPS ).
+C     WMACH(  5 ) = FLMIN. ( X02AGF. )
+C     WMACH(  6 ) = SQRT( FLMIN ).
+C     WMACH(  7 ) = FLMAX. ( 1.0/FLMIN. )
+C     WMACH(  8 ) = SQRT( FLMAX ).
+C     WMACH(  9 ) = 0.0 IF X02DAF IS .FALSE.,
+C                   1.0 OTHERWISE.
+C     WMACH( 10 ) = NIN. ( INPUT DEVICE NUMBER - CURRENTLY SET AS 5. )
+C     WMACH( 11 ) = NOUT. ( X04ABF. )
+C     WMACH( 12 )
+C     WMACH( 13 )   NOT CURRENTLY USED.
+C     WMACH( 14 )
+C     WMACH( 15 )
+C
+C  NOTE THAT CONSTANTS THAT REPRESENT INTEGERS MAY HOLD A NUMBER JUST
+C  LESS THAN THE INTEGER, SO THAT THE INTEGER SHOULD BE RECOVERED BY
+C  ADDING 0.25.
+C  E. G.
+C     IBASE = WMACH( 1 ) + 0.25
+C
+C  -- WRITTEN ON 22-SEPT-1982.  S.J.HAMMARLING.
+C
+C
+C     .. ARRAYS IN COMMON ..
+      DOUBLE PRECISION WMACH(15)
+C     ..
+C     .. LOCAL SCALARS ..
+      DOUBLE PRECISION BASE, EPS, FLMAX, FLMIN, HALF, ONE, T, TWO, ZERO
+      INTEGER I, NIN, NOUT
+C     .. FUNCTION REFERENCES ..
+!      DOUBLE PRECISION LOG, SQRT, X02AAF, X02AGF
+      DOUBLE PRECISION  X02AAF, X02AGF
+      INTEGER X02BAF
+      LOGICAL X02DAF
+C     .. SUBROUTINE REFERENCES ..
+C     X04ABF
+C     ..
+      COMMON /AX02ZA/ WMACH
+      DATA HALF /0.5D+0/, ONE /1.0D+0/, TWO /2.0D+0/
+      DATA ZERO /0.0D+0/
+C
+      BASE = X02BAF(ZERO)
+      EPS = X02AAF(ZERO)
+      I = (LOG(EPS)+LOG(TWO))/LOG(BASE) - HALF
+      T = 1 - I
+      FLMIN = X02AGF(ZERO)
+      FLMAX = ONE/FLMIN
+      NIN = 5
+C
+      CALL X04ABF(0, NOUT)
+C
+      WMACH(1) = BASE
+      WMACH(2) = T
+      WMACH(3) = EPS
+      WMACH(4) = SQRT(EPS)
+      WMACH(5) = FLMIN
+      WMACH(6) = SQRT(FLMIN)
+      WMACH(7) = FLMAX
+      WMACH(8) = SQRT(FLMAX)
+      WMACH(9) = ZERO
+      IF (X02DAF(ZERO)) WMACH(9) = ONE
+      WMACH(10) = NIN
+      WMACH(11) = NOUT
+C
+      RETURN
+C
+C  END OF X02ZAZ.
+C
+      END
+      SUBROUTINE X04AAF(I,NERR)
+C     MARK 7 RELEASE. NAG COPYRIGHT 1978
+C     MARK 7C REVISED IER-190 (MAY 1979)
+C     IF I = 0, SETS NERR TO CURRENT ERROR MESSAGE UNIT NUMBER
+C     (STORED IN NERR1).
+C     IF I = 1, CHANGES CURRENT ERROR MESSAGE UNIT NUMBER TO
+C     VALUE SPECIFIED BY NERR.
+C
+C     *** NOTE ***
+C     THIS ROUTINE ASSUMES THAT THE VALUE OF NERR1 IS SAVED
+C     BETWEEN CALLS.  IN SOME IMPLEMENTATIONS IT MAY BE
+C     NECESSARY TO STORE NERR1 IN A LABELLED COMMON
+C     BLOCK /AX04AA/ TO ACHIEVE THIS.
+C
+C     .. SCALAR ARGUMENTS ..
+      INTEGER I, NERR
+C     ..
+C     .. LOCAL SCALARS ..
+      INTEGER NERR1
+C     ..
+      DATA NERR1 /6/
+      IF (I.EQ.0) NERR = NERR1
+      IF (I.EQ.1) NERR1 = NERR
+      RETURN
+      END
+      SUBROUTINE X04ABF(I,NADV)
+C     MARK 7 RELEASE. NAG COPYRIGHT 1978
+C     MARK 7C REVISED IER-190 (MAY 1979)
+C      IF I = 0, SETS NADV TO CURRENT ADVISORY MESSAGE UNIT NUMBER
+C     (STORED IN NADV1).
+C     IF I = 1, CHANGES CURRENT ADVISORY MESSAGE UNIT NUMBER TO
+C     VALUE SPECIFIED BY NADV.
+C
+C     *** NOTE ***
+C     THIS ROUTINE ASSUMES THAT THE VALUE OF NADV1 IS SAVED
+C     BETWEEN CALLS.  IN SOME IMPLEMENTATIONS IT MAY BE
+C     NECESSARY TO STORE NADV1 IN A LABELLED COMMON
+C     BLOCK /AX04AB/ TO ACHIEVE THIS.
+C
+C     .. SCALAR ARGUMENTS ..
+      INTEGER I, NADV
+C     ..
+C     .. LOCAL SCALARS ..
+      INTEGER NADV1
+C     ..
+      DATA NADV1 /6/
+      IF (I.EQ.0) NADV = NADV1
+      IF (I.EQ.1) NADV1 = NADV
+      RETURN
+      END
+      FUNCTION G05CAF(DUMMY)
+C     THIS IS A MOCK-UP OF THE NAG ASSEMBLER ROUTINE OF THE SAME    #045
+C     NAME. ITS PURPOSE IS TO ACT AS A PSEUDO-RANDOM NUMBER GENERATOR.
+C     THE FIRST 79 CALLS ARE THE SAME AS TO THE ORIGINAL FOR AN IBM 165.
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+      DIMENSION RANDOM(79)
+      DATA NCALL/0/
+      DATA RANDOM/      0.1862980773D+0,0.1288061072D+0,0.3948132489D+0,
+     *  0.6719258150D-1,0.6788919497D+0,0.2417771465D+0,0.1861539372D+0,
+     *  0.8875558522D+0,0.7254428576D+0,0.9380249118D+0,0.5815110870D+0,
+     *  0.2682036611D+0,0.4904102981D+0,0.9312128897D+0,0.9599153931D+0,
+     *  0.3116980397D+0,0.1661142455D+0,0.5203012945D+0,0.6587589090D+0,
+     *  0.2322642835D+0,0.3924693533D+0,0.6677987211D+0,0.2661503712D+0,
+     *  0.8080276980D+0,0.2183076623D+0,0.2553464784D+0,0.7451271111D+0,
+     *  0.7598877466D+0,0.2198195424D-2,0.8224619982D+0,0.5699032470D+0,
+     *  0.3720734678D+0,0.4827042696D+0,0.7854376643D+0,0.8741002046D+0,
+     *  0.1650619599D+0,0.9919977430D+0,0.9216703270D+0,0.4675474611D-1,
+     *  0.1379522956D+0,0.3775969174D+0,0.7460573088D+0,0.6136870404D+0,
+     *  0.8116838448D+0,0.2033321054D+0,0.2147920337D+0,0.5064198742D+0,
+     *  0.9170763104D+0,0.3080889325D+0,0.9405617714D+0,0.8418875251D+0,
+     *  0.4671256056D+0,0.9594148113D+0,0.9307169489D+0,0.4302808711D+0,
+     *  0.4812543844D+0,0.1994666043D+0,0.8123845277D+0,0.6630019555D+0,
+     *  0.2720943661D+0,0.7450708109D+0,0.5372236653D+0,0.1805351427D+0,
+     *  0.6335824062D-1,0.1147316279D+0,0.4019526169D+0,0.5649596041D+0,
+     *  0.9317423345D+0,0.5056658199D-1,0.7933498259D+0,0.4214128543D+0,
+     *  0.8611409561D+0,0.4567992497D+0,0.9806162289D+0,0.3624404323D+0,
+     *  0.5193101150D+0,0.9568727400D+0,0.1240604728D+0,0.8326394075D+0/
+C      COUNT THE NUMBER OF CALLS
+       NCALL=NCALL+1
+       IFACT=(NCALL-1)/79
+       ICALL=NCALL-79*IFACT
+       G05CAF=RANDOM(ICALL)
+       IF (IFACT .LE. 0) RETURN
+       IFACT=MOD(IFACT,101)
+       GO5CAF=G05CAF+DBLE(IFACT)/101.0D0
+       IF (G05CAF .GT. 1.0D0) G05CAF=G05CAF-1.0D0
+       RETURN
+       END
+
