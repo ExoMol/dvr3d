@@ -1,0 +1,1 @@
+ifort  -mkl dipole3_emil_cdms.f90 dipd.f DMS.f90 -o dipole_cdmswall.x 2>err

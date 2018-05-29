@@ -1,0 +1,10 @@
+ &PRT zperp=.false.,zembed=.true., zrot=.true., ztran=.true., zlin=.false., zpfun=.true. /
+    3
+   90   0   40  60  2000 1000   -1    1   90    0
+ S16O2 - RADAU SYMMETRISED COORDINATES
+
+      15.990526           15.990526           31.963294
+      15.990526           15.990526           31.963294
+8000.0
+       2.9                0.3               0.012
+       2.9                0.3               0.012

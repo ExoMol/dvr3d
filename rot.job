@@ -1,0 +1,6 @@
+&PRT toler=1.0d-5, zpvec=.false., zptra=.false. zpfun=.true., zdcore=.true.,ztran=.true./
+100  100   2
+SO2 run
+776.45657
+
+
