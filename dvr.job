@@ -1,0 +1,81 @@
+ &PRT ztheta=.false., zmors2=.true., ztran=.true./ 
+    2                                                                                      
+   96    0   20   32  800  800    1    0   64
+   Rb--CN: J=0 calculation
+    
+ 84.9117897379d0          12.0d0        14.00307400443d0
+ 84.9117897379d0          12.0d0        14.00307400443d0
+      8000.0                                          
+      2.186             0.001d0           0.001d0   
+      5.2               0.04              0.008d0   
+
+
+======inputs are described below======
+Line 1:
+ztheta=.false. --> let theta be last in the order of solution
+zmors2=.true.  --> use Morse oscillator-like functions for R coordinate
+ztran=.true.   --> perform the transformation of the solution coefficients
+to the expression for the wavefunction amplitudes at the grid points
+
+Line 2: NCOORD (I5)
+2 for atom-rigid diatom system
+3 for full 3D calculation
+
+Line 3: NPNT2,JROT,NEVAL,NALF,MAX2D,MAX3D,IDIA,KMIN,NPNT1,IPAR,MAX3D2(11I5)
+NPNT2 --> number of DVR points in R from Gauss-(associated) Laguerre quadrature.
+JROT[0] --> total angular momentum quantum number of the system, J .
+NEVAL[10] -->number of eigenvalues and eigenvectors required.
+NALF -->number of DVR points in theta from Gauss-(associated) Legendre quadrature.
+MAX2D --> maximum dimension of the largest intermediate 2D Hamiltonian, (ignored if IDIA = −2).
+MAX3D --> maximum dimension of the final Hamiltonian.
+If ZCUT = F, it is the actual number of functions selected.
+If ZCUT = T, MAX3D must be >= than the number of functions selected using EMAX2.
+IDIA = 1 for scattering coordinates with a heteronuclear diatomic,
+= 2 for scattering coordinates with a homonuclear diatomic,
+= −1 for Radau coordinates with a heteronuclear diatomic,
+= −2 for Radau coordinates with a homonuclear diatomic.
+KMIN[0] = k for JROT > 0 and ZROT = F,
+= (1 − p) for JROT > 0 and ZROT = T.
+Note:
+For IDIA > 0, KMIN must be 1 in DVR3DRJ if KMIN = 2 in ROTLEV3.
+For ZBISC = T, setting KMIN = 2 performs p = 0 and 1 calculations.
+For ZPERP = T and ZROT = T, use KMIN = 1.
+NPNT1 --> number of DVR points in r from Gauss-(associated) Laguerre quadrature, (ignored if IDIA = −2).
+IPAR[0] --> parity of basis for the AB 2 molecule (i.e., |IDIA| = 2) case:
+IPAR = 0 for even parity and = 1 for odd.
+MAX3D2[MAX3D] --> maximum dimension of odd parity final Hamiltonians.
+(IDIA = −2, ZROT = T only).
+
+Line 4: TITLE (9A8)
+A 72 character title.
+
+Line 5: FIXCOS (F20.0)
+If ZTWOD = T, FIXCOS is the fixed value of cos θ for the run.
+If ZTWOD = F, this line is read but ignored.
+
+Line 6: (XMASS(I),I = 1,3) (3F20.0)
+XMASS(I) contains the (vibrational) mass of atom I in atomic mass units.
+
+Line 7: (XMASSR(I),I = 1,3) (3F20.0)
+XMASSR(I) contains the rotational mass of atom I in atomic mass units.
+If XMASSR(1) is not set, XMASSR is set equal to XMASS.
+
+Line 8: EMAX1, EMAX2 (2F20.0)
+EMAX1 --> is the first cut-off energy in cm −1 with the same energy zero as the potential.
+This determines the truncation of the 1D solutions (IDIA > −2 only).
+EMAX2 --> is the second cut-off energy in cm −1 with the same energy zero as the potential.
+This controls the truncation of the 2D solutions (i.e., the size of the final basis). If ZCUT = F it is
+ignored and the size of the final Hamiltonian is MAX3D.
+Line 9: RE1,DISS1,WE1 (3F20.0)
+If NCOORD = 2, RE1 is the fixed diatomic bondlength, DISS1 and WE1 ignored.
+If NCOORD = 3, RE1 = r_eq , DISS1 = D_e and WE1 = w_e are Morse parameters for the r coordinate when
+ZMORS1 = T, and are spherical oscillator parameters when ZMORS1 = F.
+
+Line 10: RE2,DISS2,WE2 (3F20.0)
+If ZMORS2 = T, RE2 = r_eq , DISS2 = D_e and WE2 = w_e are Morse parameters for the R coordinate.
+If ZMORS2 = F, RE2 is ignored; DISS2 = alpha and WE2 = w_e are spherical oscillator parameters for the R coor-
+dinate.
+If IDIA = −2 line read but ignored.
+Line 11: EZERO [0.0] (F20.0)
+The ground state of the system in cm^-1 relative to the energy zero.
+Optional and only read when IDIA = ±2, IPAR = 1 and JROT = 0.

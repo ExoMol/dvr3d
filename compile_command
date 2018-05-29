@@ -1,0 +1,1 @@
+gfortran RKHS.f90 potrkhs.f90 dvr3drjz.f90 /usr/lib/liblapack.dylib
