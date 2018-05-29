@@ -1698,7 +1698,7 @@
       implicit real*8(a-h,o-z)
       real*8, dimension(nn) :: x,a,b,c,xt
       data x0/0.0d0/,x1/1.0d0/,x2/2.0d0/,x3/3.0d0/,x4/4.0d0/,&
-           eps/1.0d-12/,xstep/1.0d-6/
+           eps/1.0d-12/
       fn= dble(nn)
       csa= x0
       c(1) = x0
@@ -1728,7 +1728,7 @@
       if (pm1*p .lt. x0) then
          pm1 = -pm1
          ii = ii +1
-         xt(ii)=xxx-0.5*xstep
+         xt(ii)=xxx
       endif
 
       if (ii .eq. nn2) then
@@ -1736,8 +1736,8 @@
          call recur(ptemp,dp,pn1,xt(i),nn,alf,bta,b,c)
 40      continue
       else
-         xxx=xxx-xstep
-         if (xxx .gt. -1.5*xstep) goto 30
+         xxx=xxx-0.0001
+         if (xxx .gt. -0.0002) goto 30
          write(6,*) "Incorrect number",ii-1," of zeros found in JACOBI"
          stop
       endif 
@@ -1845,49 +1845,29 @@
       m = kz
       if (m.lt.0) goto 999
       do 10 i=1,nn2
-      
-      !For high J and high k the value pmm can become too large over this loop, i.e. larger than HUGE(X)
-      !Therefore in these instances we need pmm to be very small to begin with
-      !We later divide by this factor to achieve the originally required number
-      !For so2 at J = 200 and k > 90 we find this necessary, so we add this conditional
-	if(m.LT.90)then
-	  pmm = x1
-	else
-	  pmm = 1d-250
-	end if
-
+      pmm = x1
       fact = x1
       do 11 j=1,m
           pmm = -pmm * fact
           fact = fact + x2
    11 continue
-      
-      !Even when we use the above trick to reduce the size of pmm, it can still be too large for subsequent loops
-      !We therefore conditionally divide pmm by a large enough factor - we take this to be for k > 150 (for so2)
-      if(m.GT.150)then
-	pmm = pmm/1.0d200
-      end if
-      
+
       pleg(0,i) = pmm
       pmmp1= x(i)*(m+m+1)*pmm
       pleg(1,i)= pmmp1
-      
-      
       ll=1
       do 2 l= 2+m,lmax+lincr
       r2lm1 = dble(l+l-1)
       rlpmm1= dble(l+m-1)
       rlmm  = dble(l-m)
       pll= (x(i)*r2lm1*pmmp1 - rlpmm1*pmm)/rlmm
-
-      
       pmm= pmmp1
-      pmmp1=pll
+      pmmp1= pll
       ll=ll+1
       pleg(ll,i)= pll
 2     continue
 10    continue
-      
+
 !     set up the normalisation constants
 !     (pnorm)**2 = (2j + 1)/2   *   (j - k)! / (j + k)!
       jstart = m
@@ -1895,51 +1875,22 @@
       do 13 j = jstart,lmax+lincr
       fact = x1
       do 12 i = j-m+1,j+m
-
-	 !After a certain point, square-rooting this factor doesn't reduce the number sufficiently to a coping level
-	 !Therefore we take the fourth root instead. We set the cut-off point to be the same as that for pmm, k > 90
-	 if(m.LT.90)then
-	   facti = sqrt(dble(i))
-	 else
-	   facti = dble(i)**(1.0d0/4.0d0)
-	 end if
-        
-	 fact = fact * facti
-
-      12 continue
+         facti = dble(i)
+         fact = fact * facti
+   12 continue
       rj = dble(j)
       jj = jj + 1
-      
-      if(m.LT.90)then
-	   pnorm(jj) = sqrt((rj + rj + x1) /2)/fact
-	 else
-	   pnorm(jj) = (((rj + rj + x1) /2)**(1.0d0/4.0d0))/fact
-      end if
-      
-      
+      pnorm(jj) = (rj + rj + x1) / (fact + fact)
+      pnorm(jj) = sqrt(pnorm(jj))
    13 continue
 !     now normalise the polynomials
       do 14 i=1,nn2
          jj = -1
          do 15 j=jstart,lmax+lincr
             jj = jj + 1
-
             pleg(jj,i) = pleg(jj,i) * pnorm(jj)
-	    
-	    !This is where we multiply by the large factor initially divided from pmm at the beginning of its loop
-	    if(kz.GE.90)then
-	      pleg(jj,i) = pleg(jj,i) * 1.0d250 * pnorm(jj)
-	    end if
-	    
-	    !And for the k's which are greater than 150, we need to divide by the reducing factor again
-	     if(kz.GT.150)then
-	      pleg(jj,i) = pleg(jj,i) * 1.0d200
-	    end if
-
    15    continue
    14 continue
-
-
       return
 999   write(6,200)
 200   format(/,/,5x,'improper argument in subroutine asleg',/)

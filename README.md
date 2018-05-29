@@ -15,7 +15,6 @@ Files cpc.* and fig2.ps are the text of the article documenting the programs.
 
 Subdirectory provide test runs including sample output. These are:
 
-H3+Jacobi calculation for H3+ in Jacobi coordinate giving a sample spectrum.
 H3+Radau  calculation for H3+ in Radau coordinates including rotational excitation.
 HCN       calculation for HCN in Jacobi coordinates giving a sample spectrum.
 water     calculation for water in Radau coordinates giving a sample spectrum and
