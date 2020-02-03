@@ -52,7 +52,7 @@
 !                      We follow defintion of Lamouroux et al. http://dx.doi.org/10.1016/j.jqsrt.2014.06.011
 !        h) zrme3(f) = .false. program calculates reduced matrix elements for the octupole order.
 !                      We follow defintion of Lamouroux et al. http://dx.doi.org/10.1016/j.jqsrt.2014.06.011
-! sum_J' |<J' tau'|D^{i}_{m,n}|J'' tau''>|^{2} = 1
+! sum_J' |<J'' tau''|D^{i}_{m,n}|J' tau'>|^{2} = 1
 ! Sum rules are obeyed to <1%.
 !
 !         the namelist can also carry values for the input and
@@ -1146,6 +1146,7 @@ endif
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
+
 nu= -2
 kk2 = abs(kk1 - 2)
 
@@ -1156,10 +1157,13 @@ else
 k2= abs(kk2) + kmin2
 end if
 
+
+
 if(kk1 .eq. 0)  go to 110
 if((k2 .eq. 0) .and. (kmin2 .eq. 0)) go to 110
-if (k2.gt.jk2) goto 54
-if (k2.ge.1) then 
+if (k2 .gt. jk2) go to 97
+
+if (k2 .ge. 1) then 
 jblock=jblock+1
     if (jblock.gt.iblock) then
     iblock=iblock+1
@@ -1183,6 +1187,9 @@ endif
 else
 continue
 end if
+
+97 continue
+
 
 
 if( zrme3 .eq. .true. ) then 
