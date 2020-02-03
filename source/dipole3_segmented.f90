@@ -150,7 +150,7 @@
       character(len=8) title(9)
 
       write(6,200)
-200   format(//,5x,'Program DIPOLE3 (version of January 2019):',/)
+200   format(//,5x,'Program DIPOLE3 (version of January 2004):',/)
       call SYSTEM_CLOCK(itime0,irate2,imax2)
 !
 !     read in of the logical control parameters zprint, ztra, etc
@@ -959,21 +959,21 @@
 		if(kmin2.eq.kmin1) then
 			call dsrd(dmiddle,dstemp,ibra,mbass2,nbass2(1),neval2,&
                                 1,kbeg2,jk2,1-ip,ibase2,xd,1,1,ipar2)
-                        call dsrd(dupper,dstemp,ibra,mbass2,nbass2(2),neval2,&
+            if(jk2 .ne. 1)  call dsrd(dupper,dstemp,ibra,mbass2,nbass2(2),neval2,&
                                 2,kbeg2,jk2,ip,ibase2,xd,2,1,ipar2)
 		else
 			call dsrd(dlower,dstemp,ibra,mbass2,nbass2(1),neval2,& 
 				1,kbeg2,jk2,ip,ibase2,xd,0,1,ipar2)
 			call dsrd(dmiddle,dstemp,ibra,mbass2,nbass2(2),neval2,& 
 				2,kbeg2,jk2,1-ip,ibase2,xd,1,1,ipar2)
-			call dsrd(dupper,dstemp,ibra,mbass2,nbass2(3),neval2,& 
+if(jk2 .ne. 1) call dsrd(dupper,dstemp,ibra,mbass2,nbass2(3),neval2,& 
                    		3,kbeg2,jk2,ip,ibase2,xd,2,1,ipar2)
 		endif
 	else
 		if(kmin2.eq.kmin1) then
 			call dsrd(dmiddle,dstemp,ibra,mbass2,nbass2(1),neval2,&
                            1,kbeg2,jk2,1-ip,ibase2,xd,0,1,ipar2)
-			call dsrd(dupper,dstemp,ibra,mbass2,nbass2(2),neval2,&
+	if(jk2 .ne. 1) call dsrd(dupper,dstemp,ibra,mbass2,nbass2(2),neval2,&
                            2,kbeg2,jk2,ip,ibase2,xd,1,1,ipar2)
 		else
 			call dsrd(dupper,dstemp,ibra,mbass2,nbass2(1),neval2,& 
@@ -982,6 +982,7 @@
 	endif
       endif
 
+if(jk2 .le. 1) go to 108
 !cccccccccccccccccccccccccccccccccccc
 !     nu = +1 calculation
 !cccccccccccccccccccccccccccccccccccc
@@ -1009,6 +1010,8 @@
         endif
        endif
       endif
+
+108 continue
 !cccccccccccccccccccccccccccccccccccc
 !     nu = -1 calculation
 !cccccccccccccccccccccccccccccccccccc
@@ -2102,7 +2105,7 @@
          THETA = ACOS(COST)
       ENDIF
 
-      CALL DIPS(DIPX,DIPY,Q1,Q2,cost)
+      CALL DIPSA(DIPX,DIPY,Q1,Q2,cost)
 
 !     BONDLENGTH-BONDANGLE CO-ORDINATES
 !

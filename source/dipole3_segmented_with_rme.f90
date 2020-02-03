@@ -584,7 +584,7 @@
 101   format(5i5)
        if (ibase1 .le. 0 .or. ibase1 .gt. neval1) ibase1 = 1
        if (ibase2 .le. 0 .or. ibase2 .gt. neval2) ibase2 = 1
-ezero=x0
+ezero=0.0d0
 read(5,505,end=555) ezero
 505 format(f20.0)
   555 continue
@@ -1007,22 +1007,25 @@ if (k1.eq.1) then
         if(kmin2.eq.kmin1) then
         call dsrd(dmiddle,dstemp,ibra,mbass2,nbass2(1),neval2,&
         1,kbeg2,jk2,1-ip,ibase2,xd,1,1,ipar2)
-        call dsrd(dupper,dstemp,ibra,mbass2,nbass2(2),neval2,&
+if(jk2 .ne. 1) call dsrd(dupper,dstemp,ibra,mbass2,nbass2(2),neval2,&
         2,kbeg2,jk2,ip,ibase2,xd,2,1,ipar2)
         else
         call dsrd(dlower,dstemp,ibra,mbass2,nbass2(1),neval2,& 
         1,kbeg2,jk2,ip,ibase2,xd,0,1,ipar2)
         call dsrd(dmiddle,dstemp,ibra,mbass2,nbass2(2),neval2,& 
         2,kbeg2,jk2,1-ip,ibase2,xd,1,1,ipar2)
-        call dsrd(dupper,dstemp,ibra,mbass2,nbass2(3),neval2,& 
+ if(jk2 .ne. 1) call dsrd(dupper,dstemp,ibra,mbass2,nbass2(3),neval2,& 
         3,kbeg2,jk2,ip,ibase2,xd,2,1,ipar2)
         endif
     else
         if(kmin2.eq.kmin1) then
+
         call dsrd(dmiddle,dstemp,ibra,mbass2,nbass2(1),neval2,&
         1,kbeg2,jk2,1-ip,ibase2,xd,0,1,ipar2)
-        call dsrd(dupper,dstemp,ibra,mbass2,nbass2(2),neval2,&
+
+if(jk2 .ne. 1) call dsrd(dupper,dstemp,ibra,mbass2,nbass2(2),neval2,&
         2,kbeg2,jk2,ip,ibase2,xd,1,1,ipar2)
+
         else
         call dsrd(dupper,dstemp,ibra,mbass2,nbass2(1),neval2,& 
         1,kbeg2,jk2,ip,ibase2,xd,1,1,ipar2)
@@ -1030,9 +1033,7 @@ if (k1.eq.1) then
     endif
 endif
 
-
-
-
+if(jk2 .le. 1) go to 108
 !cccccccccccccccccccccccccccccccccccc
 !     nu = +1 calculation
 !cccccccccccccccccccccccccccccccccccc
@@ -1064,6 +1065,8 @@ if(zrme3 .eq. .true. ) call trans(tx3_p1,RME,binom,dc1,dupper,k1,k2,xfac,nu,ip,3
         endif
        endif
       endif
+
+108 continue
 !cccccccccccccccccccccccccccccccccccc
 !     nu = -1 calculation
 !cccccccccccccccccccccccccccccccccccc
@@ -1253,7 +1256,7 @@ call dsrd(dc2,dstemp,ibra,mbass2,nbass2(k2),neval2,&
 k2,kbeg2,jk2,ip,ibase2,xd,kk2,-1,ipar2)
 
 
-call trans(tx3_m3,RME,binom,dc1,dlc2,k1,k2,xfac,nu,ip,3)
+call trans(tx3_m3,RME,binom,dc1,dc2,k1,k2,xfac,nu,ip,3)
 
 
 endif
@@ -2627,7 +2630,7 @@ xe1= e1(ie1)*autocm - ezero
     if (ie1.eq.1) xe2(ie2)= e2(ie2)*autocm - ezero
     if (.not.zbisc .and. zembed) txd = -txd
     if (zpmin .and. max(ie1,ie2).gt.10) goto 2
-    write(14,208) jrot1,jrot2,kmin1,kmin2,ipar1,ipar2,ie1,ie2,xe1,xe2(ie2),(xe2(ie2)-xe1),tz1(ie1,ie2),tx1(ie1,ie2)
+    write(14,208) jrot1,jrot2,kmin1,kmin2,ipar1,ipar2,ie1,ie2,xe1,xe2(ie2),abs((xe2(ie2)-xe1)),tz1(ie1,ie2),tx1(ie1,ie2)
 
     2     continue
 
@@ -2668,7 +2671,7 @@ do 2 ie2=1,neval2
 if (ie1.eq.1) xe2(ie2)= e2(ie2)*autocm - ezero
 if (.not.zbisc .and. zembed) txd = -txd
 if (zpmin .and. max(ie1,ie2).gt.10) goto 2
-write(15,209) jrot1,jrot2,kmin1,kmin2,ipar1,ipar2,ie1,ie2,xe1,xe2(ie2),(xe2(ie2)-xe1),tz1(ie1,ie2),tx1(ie1,ie2),tx2(ie1,ie2)
+write(15,209) jrot1,jrot2,kmin1,kmin2,ipar1,ipar2,ie1,ie2,xe1,xe2(ie2),abs((xe2(ie2)-xe1)),tz1(ie1,ie2),tx1(ie1,ie2),tx2(ie1,ie2)
 
 2     continue
 
@@ -2709,7 +2712,7 @@ do 2 ie2=1,neval2
 if (ie1.eq.1) xe2(ie2)= e2(ie2)*autocm - ezero
 if (.not.zbisc .and. zembed) txd = -txd
 if (zpmin .and. max(ie1,ie2).gt.10) goto 2
-write(16,210) jrot1,jrot2,kmin1,kmin2,ipar1,ipar2,ie1,ie2,xe1,xe2(ie2),(xe2(ie2)-xe1),tz1(ie1,ie2),tx1(ie1,ie2),tx2(ie1,ie2),tx3(ie1,ie2)
+write(16,210) jrot1,jrot2,kmin1,kmin2,ipar1,ipar2,ie1,ie2,xe1,xe2(ie2),abs((xe2(ie2)-xe1)),tz1(ie1,ie2),tx1(ie1,ie2),tx2(ie1,ie2),tx3(ie1,ie2)
 
 2     continue
 
