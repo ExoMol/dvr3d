@@ -55,7 +55,7 @@ integer :: parity
   print *, re1,diss1,we1,re1,diss1,we1
 
 ! PLEASE SPECIFY EZERO TO OBTAIN ENERGIES WRT ZERO POINT EQUILIBRIUM
-  ezero = 3153.70795784d0
+  ezero = 0.0d0
 
   if(ezero .eq. 0.0d0) print *, "ZPE IS ZERO"
 
@@ -204,7 +204,7 @@ double precision :: ezero
 
 
 ! PLEASE SPECIFY EZERO TO OBTAIN ENERGIES WRT ZERO POINT EQUILIBRIUM
-  ezero = 3153.70795784d0
+  ezero = 0.0d0
 
   if(ezero .eq. 0.0d0) print *, "ZPE IS ZERO"
 
