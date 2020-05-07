@@ -208,7 +208,7 @@
 !
       common /logic/ zmors1,znco1,znco2,zprint,zpmin,ztra,zstart,zmors2,zrme1,zrme2,zrme3
       common /stream/ iket, ibra, itra, iscr, ires, mblock, nblock
-      data zmors1/.true./, zprint/.false./, ztra/.true./,zrme1/.false./,zrme2/.false./&
+      data zmors1/.true./, zprint/.false./,ztra/.true./,zrme1/.true./,zrme2/.true./&
            zrme3/.false./,zmors2/.true./, zpmin /.false./, ires/0/, nblock/1000/,&
            zstart/.false./, iket/11/, ibra/12/, itra/13/, iscr/24/
       end
@@ -1052,16 +1052,16 @@ if(jk2 .le. 1) go to 108
          if (idia.eq.-2 .and. mod((kk1+ipar11)/2+(kk2+ipar22)/2,2).ne.0)&
            xfac=-xfac
          if (.not. zembed .and. idia .lt. 0) xfac=-xfac
-  !       call dsrd(dc2,dstemp,ibra,mbass2,nbass2(k2),neval2,&
- !                  k2,kbeg2,jk2,ip,ibase2,xd,kk2,nu,ipar2)
+        call dsrd(dc2,dstemp,ibra,mbass2,nbass2(k2),neval2,&
+                   k2,kbeg2,jk2,ip,ibase2,xd,kk2,nu,ipar2)
          call trans(tx,dipol,binom,dc1,dupper,k1,k2,xfac,nu,ip,1)
 
 if(zrme1 .eq. .true. ) call trans(tx1_p1,RME,binom,dc1,dupper,k1,k2,xfac,nu,ip,1)
-if(zrme2 .eq. .true. ) call trans(tx2_p1,RME,binom,dc1,dupper,k1,k2,xfac,nu,ip,2)
-if(zrme3 .eq. .true. ) call trans(tx3_p1,RME,binom,dc1,dupper,k1,k2,xfac,nu,ip,3)
+if(zrme2 .eq. .true. ) call trans(tx2_p1,RME,binom,dc1,dc2,k1,k2,xfac,nu,ip,2)
+if(zrme3 .eq. .true. ) call trans(tx3_p1,RME,binom,dc1,dc2,k1,k2,xfac,nu,ip,3)
          call wrscr(tz,tx,neval1*neval2,iscr,iblock)
          write(6,2000) iblock,k1-kmin1,k2-kmin2
-         if (iblock .ge. kblock) goto 154
+         if (iblock .ge. kblock) goto 108
         endif
        endif
       endif
@@ -1085,23 +1085,23 @@ if(zrme3 .eq. .true. ) call trans(tx3_p1,RME,binom,dc1,dupper,k1,k2,xfac,nu,ip,3
          if (idia.eq.-2 .and. mod((kk1+ipar11)/2+(kk2+ipar22)/2,2).ne.0)&
            xfac=-xfac
          if (.not. zembed .and. idia .lt. 0) xfac=-xfac
-   !      call dsrd(dc2,dstemp,ibra,mbass2,nbass2(k2),neval2,&
-   !                k2,kbeg2,jk2,ip,ibase2,xd,kk2,nu,ipar2)
+         call dsrd(dc2,dstemp,ibra,mbass2,nbass2(k2),neval2,&
+                   k2,kbeg2,jk2,ip,ibase2,xd,kk2,nu,ipar2)
          call trans(tx,dipol,binom,dc1,dlower,k1,k2,xfac,nu,ip,1)
 
 if(zrme1 .eq. .true. ) call trans(tx1_m1,RME,binom,dc1,dlower,k1,k2,xfac,nu,ip,1)
-if(zrme2 .eq. .true. ) call trans(tx2_m1,RME,binom,dc1,dlower,k1,k2,xfac,nu,ip,2)
-if(zrme3 .eq. .true. ) call trans(tx3_m1,RME,binom,dc1,dlower,k1,k2,xfac,nu,ip,3)
+if(zrme2 .eq. .true. ) call trans(tx2_m1,RME,binom,dc1,dc2,k1,k2,xfac,nu,ip,2)
+if(zrme3 .eq. .true. ) call trans(tx3_m1,RME,binom,dc1,dc2,k1,k2,xfac,nu,ip,3)
          call wrscr(tz,tx,neval1*neval2,iscr,iblock)
          write(6,2000) iblock,k1-kmin1,k2-kmin2
-         if (iblock.ge.kblock .and. k1.lt.jk1) goto 154
+         if (iblock.ge.kblock .and. k1.lt.jk1) goto 50
         endif
        endif
       endif
 
 
 ! HERE WE COMPUTE QUADRUPOLE MATRIX ELEMENTS IF ZMRE2 .TRUE.
-
+50 continue 
 if ((zrme2 .eq. .true.) .or. (zrme3 .eq. .true.)) then
 
 nu = 2
@@ -1159,8 +1159,8 @@ end if
 
 
 
-if(kk1 .eq. 0)  go to 110
-if((k2 .eq. 0) .and. (kmin2 .eq. 0)) go to 110
+if(kk1 .eq. 0)  go to 97
+if((k2 .eq. 0) .and. (kmin2 .eq. 0)) go to 97
 if (k2 .gt. jk2) go to 97
 
 if (k2 .ge. 1) then 
@@ -1179,6 +1179,7 @@ jblock=jblock+1
         k2,kbeg2,jk2,ip,ibase2,xd,kk2,1,ipar2)
         if(zrme2 .eq. .true. ) call trans(tx2_m2,RME,binom,dc1,dc2,k1,k2,xfac,nu,ip,2)
         if(zrme3 .eq. .true. ) call trans(tx3_m2,RME,binom,dc1,dc2,k1,k2,xfac,nu,ip,3)
+
         endif
     endif
 endif
@@ -1187,6 +1188,7 @@ endif
 else
 continue
 end if
+
 
 97 continue
 
@@ -1372,7 +1374,7 @@ tz2_0 = tz2_0/dsqrt(2.0d0)
 ! FIRST COMPONENT
 tx2_p1 =   tx2_p1*(sqrt(dble(2.0d0*j2 + 1.0d0)))
 tx2_m1 = tx2_m1*(sqrt(dble(2.0d0*j2 + 1.0d0)))
-tx2_1 = tx2_p1 + tx2_m1
+tx2_1 = tx2_p1 - tx2_m1
 tx2_1 = tx2_1/dsqrt(2.0d0)
 
 ! SECOND COMPONENT
@@ -1382,7 +1384,7 @@ tx2_m2=(tx2_m2)/dsqrt(2.0d0)
 tx2_p2=(tx2_p2)/dsqrt(2.0d0)
 
 
-tx2_2 =  tx2_p2 + tx2_m2 
+tx2_2 =   tx2_m2 - tx2_p2 
 
 
 call rme2output(tz2_0,tx2_1,tx2_2,e1,e2,sint,xe2)
@@ -2669,6 +2671,7 @@ character(len=8)  title(9)
 data autocm/2.19474624d+05/,x0/0.0d0/,&
 autode/2.5417662d0/,&
 detosec/3.136186d-07/
+
 
 do 1 ie1=1,neval1
 xe1= e1(ie1)*autocm - ezero
