@@ -1,0 +1,632 @@
+\documentclass{elsart}
+\usepackage{graphicx}
+
+%% This list environment is used for the references in the
+%%      Program Summary
+%%
+\newcounter{bla}
+\bibliographystyle{elsart-num}
+\def\etal{{\sl et al.}}
+\def\ai{{\sl ab initio}}
+\def\cm{{cm$^{-1}$}}
+\begin{document}
+\begin{frontmatter}
+
+\title{Manual for ``DVR3D: a program suite for the calculation of rotation-vibration
+spectra of triatomic molecules''}
+
+\author[UCL]{Jonathan Tennyson,\thanksref{me}}
+\author[UCL]{Paolo Barletta,}
+\author[UCL]{Ross E. A. Kelly,}
+\author[UCL]{Lorenzo Lodi,}
+\author[UCL]{and Bruno C. Silva}
+
+\address[UCL]{Department of Physics and Astronomy, University College London,
+London, WC1E~6BT, UK}
+\thanks[me] {Author to whom correspondence should be addressed.
+email: j.tennyson@ucl.ac.uk, fax +(44) 20 7679 7145, telephone +(44) 20 7679 7155}
+\end{frontmatter}
+\section{Program use: Potential, dipole and property subroutines}
+
+DVR3DRJZ requires the user to provide the appropriate potential energy
+surface as a subroutine using the structure:\\
+        SUBROUTINE POTV(V,R1,R2,XCOS)\\
+must be supplied. POTV returns the potential V in Hartree for an arbitrary
+point given by R1 = r$_1$, R2 = r$_2$ (both in Bohr) and XCOS = $\cos \theta$.
+
+
+DVR3DRJZ includes
+COMMON /MASS/ XMASS(3),G1,G2,XMASSR(3)
+where XMASS contains the (vibrational) masses in atomic
+mass units, G1=$g_1$, G2=$g_2$ and XMASSR contains the rotational masses
+also in atomic
+mass units. This enables users to
+write flexible potential subroutines which allow for changes in coordinates or
+isotopic substitution.
+
+
+DIPOLE requires a subroutine defining the dipole surfaces. \\
+      SUBROUTINE DIPD(DIPC,R1,R2,XCOS,NU)\\
+must be supplied. DIPD returns the NU$^{th}$ component of the dipole in atomic
+units (1 a.u. = 2.5417662 Debye) at point R1 = r$_1$, R2 = r$_2$ (both in Bohr)
+and XCOS = $\cos \theta$ where NU = 0 corresponds to $\mu_z$ and NU = 1
+$\mu_x$.
+
+DIPOLE3 includes COMMON /MASS/ XMASS(3),G1,G2,ZEMBED,ZBISC where XMASS
+contains the (vibrational) masses, G1=$g_1$, G2=$g_2$, ZEMBED is the
+axis embedding parameter defined below and ZBISC=.TRUE. for the
+bisector embedding case (IDIA=$-$2, JROT $>$ 0 and ZPERP = .FALSE.) and
+.FALSE. otherwise. This enables users to write dipole subroutines
+which allow for changes in coordinates, embeddings or isotopic
+substitution.
+
+XPECT3 requires a subroutine defining the properties for which
+expectation values are requested.\\
+     SUBROUTINE PROPS(PROP,R1,R2,XCOS,N)\\
+must be supplied. PROPS returns the N properties required
+in array PROP  for an arbitrary
+point given by R1 = r$_1$, R2 = r$_2$ (both in Bohr) and XCOS = $\cos \theta$.
+Like DIPOLE3, XPECT3 includes COMMON /MASS/ XMASS(3),G1,G2,ZEMBED,ZBISC
+where the variables are as defined above.
+
+\section{Input for DVR3DRJZ}
+
+DVR3DRJZ requires 9 lines of user input for all runs.
+Lines giving data not required or
+for which the defaults [given below in parenthesis] are sufficient should be
+left blank.
+\vskip 0.2cm
+\begin{tabbing}
+ZMORSE[T]i\=    fdasdfsasdfsdfg\=   \=             \kill
+{\bf Line 1: NAMELIST /PRT/} \\
+ZPHAM[F] \> = T requests printing of the Hamiltonian matrix.\\
+ZPRAD[F] \> = T requests printing of the radial matrix elements.\\
+ZP1D [F] \> = T requests printing of the results of 1D calculations.\\
+ZP2D [F] \> = T requests printing of the results of 2D calculations.\\
+ZPMIN[F]\> = T requests only minimal printing.\\
+ZPVEC[F]\> = T requests printing of the eigenvectors.\\
+ZLMAT[F]\> = T requests printing of the $L$-matrix.\\
+ZCUT[F] \> = T final dimension selected using an energy cut-off given by
+EMAX2.\\
+         \> = F final dimension determined by MAX3D (MAX3D2).\\
+ZROT[T] \> = T DVR3DRJZ to perform first step in a two-step variational
+calculation.\\
+         \> = F Rotational excitation calculation with Coriolis coupling
+neglected.\\
+ZPERP[F] \> = F  $z$ axis embedded in plane.\\
+         \> = T  $z$ axis embedded perpendicular to molecular plane.\\
+ZEMBED[T]\>  Used only if $ J > 0$, ZBISC = F and ZPERP = F,.\\
+        \> = T $z$ axis embedded along $r_2$;\\
+        \> = F $z$ axis embedded along $r_1$.\\
+ZLIN [F]\> = T forces suppression of functions at last DVR point\\
+        \> (ZBISC = T or ZPERP=T only).\\
+ZMORS1[T]\> = T use Morse oscillator-like functions for $r_1$ coordinate;\\
+         \> = F use spherical oscillator functions (IDIA $> 0$ only).\\
+ZMORS2[T]\> = T use Morse oscillator-like functions for $r_2$ coordinate;\\
+         \> = F use spherical oscillator functions (IDIA $> 0$ only).\\
+ZLADD[T] \> = T NALF kept constant as $k$ increases,\\
+         \> = F NALF decreases with $k$ (=f has a bug),\\
+         \> (used if ZROT = T only).\\
+ZTWOD[F] \> = T perform 2D calculation only at specified grid point.\\
+ZVEC[F]  \> = T store the eigenvectors from all the parts of the calculation
+(1D,2D and 3D) \\
+\> on stream IOUT2. Further information relating to this (arrays IV1 and
+IV2)\\
+\> is stored on stream IOUT1. \\
+ZALL[F] \> = T requests {\bf no} truncation of the intermediate solution. \\
+ZTHETA[T]\> = T let $\theta $ be first in the order of solution;\\
+         \> = F let $\theta $ be last in the order of solution; \\
+         \> (used if IDIA $> -2$ only).\\
+ZR2R1[T]\> = T let r$_2$ come before r$_1$ in the order of solution;\\
+         \> = F let r$_1$ come before r$_2$ in the order of solution;\\
+         \> (used if IDIA $> -2$ only).\\
+ZTRAN[F] \> = T perform the transformation of the solution coefficients
+to the expression\\
+\> for the wavefunction amplitudes at the grid points, eq (29).\\
+\> Store the data on stream IWAVE.\\
+\>  ZTRAN = T automatically sets ZVEC = T if IDIA $> -2$. \\
+ZQUAD2[T] \> = T use the DVR quadrature approximation for the integrals of
+the $r_2^{-2}$ matrix,\\
+          \> and hence make its DVR transformation diagonal. \\
+          \> = F evaluate the $r_2^{-2}$ integrals fully and perform the
+DVR  transformation \\
+\> on them, only implemented for ZMORS2 = F and for ZTHETA = T.\\
+ZDIAG[T] \> = F do not do final diagonalisation, instead the final Hamiltonian
+matrix is\\
+\> written on units IDIAG1[20] and IDIAG2[21]. \\
+\> For further details see the
+source code.\\
+ZPFUN[F]\> = T eigenvalues concatenated on stream ILEV.\\
+ \> Warning, the first eigenvalues on this file must be for JROT=0, IPAR=0.\\
+ILEV[14] \> output stream for eigenvalue data (formatted).\\
+IEIGS1[7] \> stream for eigenvalues of the 1D solutions.\\
+IVECS1[3] \> stream for eigenvectors of the 1D solutions.\\
+IEIGS2[2] \> stream for eigenvalues of the 2D solutions.\\
+IVECS2[4] \> stream for eigenvectors of the 2D solutions.\\
+IVINT[17] \> scratch file used for storing intermediate vectors in
+building the final Hamiltonian. \\
+IBAND[15] \> scratch file used for storing bands of the final Hamiltonian. \\
+INTVEC[16]\> scratch file for intermediate storage of the 2D vectors. \\
+IOUT1[24] \> stream for arrays IV1 and IV2, which record the sizes of the
+ truncated vectors.\\ \> Used when ZVEC = T.\\
+IOUT2[25] \> stream for the 1D, 2D and 3D vectors for use
+when ZVEC = T.\\
+IWAVE[26] \> stores the wavefunction amplitudes at the grid points when
+ZTRAN = T. \\
+\\
+{\bf Line 2: NCOORD} (I5)\\
+NCOORD[3] \> the number of vibrational coordinates of the problem:\\
+          \> = 2 for an atom -- rigid diatom system, \\
+          \> = 3 for a full triatomic.\\
+\\
+{\bf Line 3: NPNT2,JROT,NEVAL,NALF,MAX2D,MAX3D,IDIA,}\\
+\>{\bf KMIN,NPNT1,IPAR,MAX3D2}(11I5)\\
+NPNT2 \> number of DVR points in $r_2$ from Gauss-(associated) Laguerre
+quadrature. \\
+JROT[0] \> total angular momentum quantum number of the system, $J$.\\
+NEVAL[10] \> number of eigenvalues and eigenvectors required.\\
+NALF \>number of DVR points in $\theta$ from  Gauss-(associated) Legendre
+quadrature.\\
+MAX2D\> maximum dimension of the largest intermediate 2D Hamiltonian,\\
+      \> (ignored if IDIA $= -2$).\\
+MAX3D\> maximum dimension of the final Hamiltonian.\\
+      \> If ZCUT = F, it is the actual number of functions selected,\\
+      \> if ZCUT = T, MAX3D must be $\geq$ than the number of functions
+selected \\
+\> using EMAX2.\\
+IDIA \> = 1 for scattering coordinates with a heteronuclear diatomic, \\
+\> = 2 for scattering coordinates with a homonuclear diatomic. \\
+\> = $-$1 for Radau  coordinates with a heteronuclear diatomic, \\
+\> = $-$2 for Radau  coordinates with a homonuclear diatomic. \\
+KMIN[0]\> = k for JROT $>$ 0 and ZROT = F,\\
+\> = $(1 - p)$ for JROT $>$ 0 and ZROT = T. \\
+\> Note:\\
+\> For IDIA $ > 0$, KMIN must be 1 in DVR3DRJ if KMIN = 2 in ROTLEV3.\\
+\> For ZBISC = T, setting KMIN=2 performs  $p = 0$ and 1 calculations.\\
+\> For ZPERP = T and ZROT = T, use KMIN = 1.\\
+NPNT1 \> number of DVR points in r$_1$ from Gauss-(associated) Laguerre
+quadrature, \\
+      \> (ignored if IDIA $= -2$).\\
+IPAR[0] \> parity of basis for the AB$_2$ molecule (ie $\mid$ IDIA $\mid$ = 2) case:\\
+        \> IPAR=0 for even parity and = 1 for odd.\\
+MAX3D2[MAX3D] maximum dimension of odd parity final Hamiltonians.\\
+        \> (IDIA = $-2$,  ZROT=T only).\\
+\\
+{\bf Line 4: TITLE} (9A8) \\
+A 72 character title.\\
+\\
+{\bf Line 5: FIXCOS} (F20.0) \\
+If ZTWOD = T, FIXCOS is the fixed value of $\cos\theta$ for the run.\\
+If ZTWOD = F, this line is read but ignored.\\
+\\
+{\bf Line 6: (XMASS(I),I=1,3)} (3F20.0)\\
+XMASS(I) \> contains the (vibrational) mass of atom I in atomic mass units. \\
+\\
+{\bf Line 7: (XMASSR(I),I=1,3)} (3F20.0)\\
+XMASSR(I) \> contains the rotational mass of atom I in atomic mass units. \\
+If XMASSR(1) is not set, XMASSR is set equal to XMASS.\\
+\\
+{\bf Line 8: EMAX1, EMAX2} (2F20.0)\\
+EMAX1 \> is the first cut-off energy in \cm\ with the same energy zero as the
+potential. \\
+This determines the truncation of the 1D solutions (IDIA $> - 2$ only).\\
+EMAX2 \> is the second cut-off energy in \cm\ with the same energy zero as the
+potential. \\
+This controls the truncation of the 2D solutions (ie. the size of
+the final basis). If ZCUT = F \\ it is ignored and the size of the final
+Hamiltonian is MAX3D. \\
+\\
+{\bf Line 9: RE1,DISS1,WE1} (3F20.0)\\
+If NCOORD = 2, RE1 is the fixed diatomic bondlength, DISS1 and WE1 ignored.\\
+If NCOORD = 3, RE1 = $r_e$, DISS1 = $D_e$ and WE1 = $\omega_e$\\
+\>  are Morse parameters for the $r_1$ coordinate when ZMORS1 = T, and are\\
+\>  spherical oscillator parameters when ZMORS1 = F. \\
+\\
+{\bf Line 10: RE2,DISS2,WE2} (3F20.0)\\
+If ZMORS2 = T, RE2 = $r_e$, DISS2 = $D_e$ and WE2 = $\omega_e$\\
+\>  are Morse parameters for the $r_2$ coordinate.\\
+If ZMORS2 = F, RE2 is ignored; DISS2 = $\alpha$ and WE2 = $\omega_e$ \\
+\> are spherical oscillator parameters for the $r_2$ coordinate.\\
+If IDIA = $-2$ line read but ignored.\\
+\\
+{\bf Line 11: EZERO} [0.0] (F20.0)\\
+The ground state of the system in \cm\ relative to the energy zero. \\
+Optional and only read  when IDIA=$\pm$2, IPAR=1 and JROT=0.\\
+\end{tabbing}
+
+\subsection{Input for ROTLEV3}
+
+Most of the data for ROTLEV3, which must have been prepared previously by
+DVR3DRJZ run with IDIA $> -2$, is read from stream IWAVE. 3 or 4 lines of data
+are read. \\
+\begin{tabbing}
+ZMORSE[T]i\=    fdasdfsasdfsdfg\=   \=             \kill
+{\bf Line 1: NAMELIST/PRT/}\\
+\\
+TOLER[0.0D0] tolerance for convergence of the eigenvalues by F02FJF \cite{NAG},\\
+\>  zero gives machine accuracy, $1 \times 10^{-4}$ is usually sufficient
+for most applications.\\
+\> (Ignored if ZDCORE = T.)\\
+ZPVEC[F] \> = T requests printing of the eigenvectors.\\
+THRESH[0.1d0] threshold for printing eigenvector coefficients,\\
+\> zero requests the full vector (only used if ZPVEC = T).\\
+ZPHAM[F] \> = T requests printing of the Hamiltonian matrix.\\
+ZPTRA[F] \> = T requests printing of the transformed vectors.\\
+IWAVE[26]\> stream for input data from DVR3DRJZ (unformatted).\\
+IVEC[4] \> scratch file for the transformed input vectors (unformatted).\\
+JVEC[3] \> stream for first set of eigenvalue/vector output
+(unformatted).\\
+JVEC2[2] \> stream for second set of eigenvalue/vector output
+(unformatted), KMIN=2 only.\\
+ZTRAN[F] \> = T eigenvectors transformed back to original basis.\\
+ZVEC[F] \> = T eigenvalue and eigenvector data to be written to disk file.\\
+        \> (= T forced if ZTRAN = T).\\
+KVEC[8] \> stream for first set of transformed eigenvector output
+(unformatted).\\
+KVEC2[9] \> stream for second set of transformed eigenvector output
+(unformatted),\\ \> KMIN=2 only.\\
+ISCR[1] \> stream for scratch file storing Hamiltonian matrix (unformatted).\\
+JSCR[7] \> stream for scratch file storing DVR3DRJZ vectors transformed to an
+FBR in $\theta$\\ \> (unformatted). Used only if ZTRAN = T.\\
+IRES[0] \> restart flag:\\
+        \> = 0 normal run.\\
+        \> = 1 full restart.\\
+        \> = 2 restart second diagonalisation only (for KMIN = 2 only).\\
+        \> = $-$1 perform vector transformation only (stream JVEC must be
+supplied).\\
+ZPFUN[F]\> = T eigenvalues concatenated on stream ILEV. The first
+eigenvalues \\ \> on this file must (with $J=0$, $j$ even) be already
+present.\\
+ILEV[14] \> stream for eigenvalue data (formatted).\\
+ZDIAG[T] \> = F do not diagonalise the Hamiltonian matrix.\\
+ZDCORE[F]\> = T diagonalisation performed in core using BLAS routine dsyev,\\
+         \> = F diagonalisation performed iteratively using NAG Routine
+F02FJF.\\
+\\
+{\bf Line 2: NVIB,NEVAL,KMIN,IBASS,NEVAL2} (5I5)\\
+\\
+NVIB \> number of vibrational levels from DVR3DRJZ for each $k$ to be
+read,\\
+\> and perhaps selected from, in the second variational step.\\
+NEVAL[10] \> the number of eigenvalues required for the first set.\\
+KMIN[0] \> = 0, f or $p = 1$ parity calculation.\\
+        \> = 1, e or $p = 0$ parity calculation.\\
+        \> = 2 , do both e and f parity calculation.\\
+IBASS[0] \> = 0 or $>$ NVIB*(JROT+KMIN), use all the vibrational levels.\\
+        \> Otherwise, select IBASS levels with the lowest energy.\\
+NEVAL2[NEVAL] the number of eigenvalues required for the second set.\\
+\\
+{\bf Line 3: TITLE} (9A8)\\
+A 72 character title.\\
+\\
+{\bf Line 4: EZERO} [0.0] (F20.0)\\
+Optional. The ground state of the system in \cm\ relative to the energy zero.\\
+\end{tabbing}
+
+\subsection{Input for ROTLEV3B}
+
+Most of the data for ROTLEV3B, which must have been prepared previously by
+DVR3DRJZ run with IDIA $= -2$, is read from streams IVEC and IVEC2. 3 or 4 lines
+of data are read. \\
+\begin{tabbing}
+ZMORSE[T]i\=    fdasdfsasdfsdfg\=   \=             \kill
+{\bf Line 1: NAMELIST/PRT/}\\
+\\
+TOLER[0.0D0] tolerance for convergence of the eigenvalues by F02FJF \cite{NAG},\\
+\>  zero gives machine accuracy, $1 \times 10^{-4}$ is usually sufficient for
+most applications.\\
+\> (Ignored if ZDCORE = T.)\\
+ZPVEC[F] \> = T requests printing of the eigenvectors.\\
+THRESH[0.1d0] threshold for printing eigenvector coefficients,\\
+\> zero requests the full vector (only used if ZPVEC = T).\\
+ZPHAM[F] \> = T requests printing of the Hamiltonian matrix.\\
+ZPTRA[F] \> = T requests printing of the transformed vectors.\\
+IVEC[26]\> stream for input data from DVR3DRJZ (unformatted).\\
+IVEC2[4]\> second stream for input data from DVR3DRJZ (unformatted);\\
+        \> this file is simply a copy of that on stream IVEC.\\
+ZVEC[F] \> = T eigenvalue and eigenvector data to be written to disk file.\\
+        \> (= T forced if ZTRAN = T).\\
+JVEC[3] \> stream for first set of eigenvalue/vector output
+(unformatted).\\
+JVEC2[2] \> stream for second set of eigenvalue/vector output
+(unformatted), KMIN=2 only.\\
+ZTRAN[F] \> = T eigenvector transformed back to original basis.\\
+ZVEC[F] \> = T eigenvalue and eigenvector data to be written to disk file.\\
+        \> (= T forced if ZTRAN = T).\\
+KVEC[8] \> stream for first set of transformed eigenvector output
+(unformatted).\\
+KVEC2[9] \> stream for second set of transformed eigenvector output
+(unformatted),\\
+\> KMIN=2 only.\\
+ISCR[1] \> stream for scratch file storing array OFFDG (unformatted).\\
+IRES[0] \> restart flag:\\
+        \> = 0 normal run.\\
+        \> = 1 full restart.\\
+        \> = 2 restart second diagonalisation only (for KMIN = 2 only).\\
+        \> = $-$1 perform vector transformation only (stream JVEC must be
+supplied).\\
+ZPFUN[F]\> = T eigenvalues concatenated on stream ILEV. The first
+eigenvalues \\ \> on this file must (with $J=0$, $j$ even) be already
+present.\\
+ILEV[14] \> stream for eigenvalue data (formatted).\\
+ZDIAG[T] \> = F do not diagonalise the Hamiltonian matrix.\\
+ZDCORE[F]\> = T diagonalisation performed in core using BLAS routine dsyev,\\
+         \> = F diagonalisation performed iteratively using NAG Routine
+F02FJF.\\
+\\
+{\bf Line 2: NVIB,NEVAL,KMIN,IBASS,NEVAL2,NPNT} (5I5)\\
+\\
+NVIB \> number of vibrational levels from DVR3DRJZ for each k to be read,\\
+\> and perhaps selected from, in the second variational step.\\
+NEVAL[10] \> the number of eigenvalues required for the first set.\\
+KMIN[0] \> = 0, f or $p = 1$ parity calculation.\\
+        \> = 1, e or $p = 0$ parity calculation.\\
+        \> = 2 , do both e and f parity calculation.\\
+IBASS[0] \> = 0 or $>$ NVIB*(JROT+KMIN), use all the vibrational levels.\\
+        \> Otherwise, select IBASS levels with the lowest energy.\\
+NEVAL2[NEVAL] the number of eigenvalues required for the second set.\\
+NPNT[NALF] number of quadrature points for angular integrals.\\
+\\
+{\bf Line 3: TITLE} (9A8)\\
+A 72 character title.\\
+\\
+{\bf Line 4: EZERO} [0.0] (F20.0)\\
+Optional. The ground state of the system in \cm\ relative to the energy zero.\\
+\end{tabbing}
+
+\subsection{Input for ROTLEV3Z}
+
+Most of the data for ROTLEV3Z, which must have been prepared previously by
+DVR3DRJZ run with IDIA $= -2$, is read from streams IVEC and IVEC2.
+ The program also uses six
+scratch files which are associated with streams 1, 11, 60, 61, 70, 80 and 81.
+4 or 5 lines
+of data are read. \\
+\begin{tabbing}
+ZMORSE[T]i\=    fdasdfsasdfsdfg\=   \=             \kill
+{\bf Line 1: NAMELIST/PRT/}\\
+\\
+ZPVEC[F] \> = T requests printing of the eigenvectors.\\
+IVEC[26]\> stream for input data from DVR3DRJZ run with IPAR = 0 (unformatted).\\
+IVEC2[27]\> stream for input data from DVR3DRJZ run with IPAR = 1  (unformatted);\\
+ZVEC[F] \> = T eigenvalue and eigenvector data to be written to disk file.\\
+        \> (= T forced if ZTRAN = T).\\
+JVEC[3] \> stream for eigenvalues and untransformed vectors
+(unformatted).\\
+ZTRAN[F] \> = T eigenvector transformed back to original basis.\\
+ZPTRA[F] \> = T requests printing of the transformed vectors.\\
+ZVEC[F] \> = T eigenvalue and eigenvector data to be written to disk file.\\
+        \> (= T forced if ZTRAN = T).\\
+KVEC[8] \> stream for eigenvalues and  FBR transformed eigenvector output
+(unformatted).\\
+KVEC2[9] \> stream for eigenvalues and  DVR eigenvector output
+(unformatted).\\
+ZPFUN[F]\> = T eigenvalues concatenated on stream ILEV. The first
+eigenvalues \\ \> on this file must (with $J=0$, $j$ even) be already
+present.\\
+ILEV[14] \> stream for eigenvalue data (formatted).\\
+ZDIAG[T] \> = F do not diagonalise the Hamiltonian matrix.\\
+ZDIAG[F] \> = T selects the basis elements according to energy considerations.\\
+\\
+{\bf Line 2: NVIB,NEVAL,KPAR,IBASS,IQPAR,NPNT} (6I5)\\
+\\
+NVIB \> number of vibrational levels from DVR3DRJZ for each k to be read,\\
+\> and perhaps selected from, in the second variational step.\\
+NEVAL[10] \> the number of eigenvalues required for the first set.\\
+KPAR \> = 0, for $k$ even calculation,\\
+        \> = 1, for $k$ odd calculation.\\
+IBASS[0] \> = 0 or $>$ NVIB*(JROT+1), use all the vibrational levels.\\
+        \> Otherwise, select IBASS levels with the lowest energy.\\
+IQPAR \> parity of basis set, ie 0 or 1.\\
+NPNT[NALF] number of quadrature points for angular integrals.\\
+\\
+{\bf Line 3: TITLE} (9A8)\\
+A 72 character title.\\
+\\
+{\bf Line 4: CUT-OFF} [0.0] (F20.0)\\
+The basis elements used to build the rotational Hamiltonian are selected according to energy considerations; that is all levels with 3D energy less than the cut-off are included in the Hamiltonian.\\
+\\
+{\bf Line 4: EZERO} [0.0] (F20.0)\\
+Optional. The ground state of the system in \cm\ relative to the energy zero.\\
+\end{tabbing}
+
+\section{Input for DIPOLE3}
+
+DIPOLE3 takes most of its input from the output streams IWAVE (from DVR3DRJZ) or
+KVEC and KVEC2 (from ROTLEV3 or ROTLEV3B).  It has the option to produce output
+files for
+SPECTRA \cite{jt128} to calculate simulated spectra at a given temperature.
+Input and output on streams IKET, IBRA and ITRA are in atomic units.
+The data printed
+at the end of DIPOLE is given in wavenumbers, Debye for the transition dipoles
+and s$^{-1}$ for the Einstein $A$ coefficients.
+The user must supply the following three lines of input
+\vskip 0.2cm
+\begin{tabbing}
+ZMORSE[T]i\=    fdasdfsasdfsdfg\=   \=             \kill
+{\bf Line 1: NAMELIST/PRT/}\\
+\\
+ZPRINT[F] \> = T supplies extra print out for debugging purposes.\\
+ZTRA[T] \> = T writes data for SPECTRA to stream ITRA.\\
+ZSTART[F] \> = T initiates the output file for the data for SPECTRA.\\
+    \> = F writes data to the end of existing file on stream ITRA.\\
+IKET[11] \> input stream from DVR3DRJZ/ROTLEV3/ROTLEV3B for the ket
+(unformatted).\\
+IBRA[12] \>  input stream for the bra (unformatted).\\
+ITRA[13] \>  output stream to SPECTRA (if ZTRA= T) (unformatted).\\
+\\
+{\bf Line 2: TITLE} (9A8)\\
+A 72 character title.\\
+\\
+{\bf Line 3: NPOT, NV1, NV2, IBASE1, IBASE2} (5I5)\\
+\\
+NPOT \> number of Gauss-Legendre quadrature points.\\
+NV1[all] \> number of ket eigenfunctions considered.\\
+NV2[all] \> number of bra eigenfunctions considered.\\
+IBASE1[0] \> number of lowest ket eigenfunctions skipped.\\
+IBASE2[0] \> number of lowest bra eigenfunctions skipped.\\
+\\
+{\bf Line 4: EZERO} [0.0] (F20.0)\\
+The ground state of the system in \cm\ relative to the energy zero. \\
+\end{tabbing}
+
+
+\section{Input for SPECTRA}
+
+SPECTRA takes most of its input from stream ITRA generated by DIPOLE. Data for
+generating partition functions may optionally be provided by DVR3DRJZ and one
+of the ROTLEV programs via stream
+ILEV. The user must supply 5 (4 if ZSPE=.FALSE.) lines of input.
+
+\vskip 0.2cm
+\begin{tabbing}
+ZMORSE[T]i\=    fdasdfsasdfsdfg\=   \=             \kill
+{\bf Line 1: NAMELIST/PRT/}\\
+\\
+ZOUT[F] \> = T, print sorted transition frequencies and line strengths. \\
+\> ZOUT is set automatically to T if ZSPE=F.\\
+ZSORT[T] \> = T sort transition data and write it to stream ISPE.\\
+         \> = F sorted transition data is to be read from stream ISPE.\\
+ZSPE[T] \> = F if the program is to stop after sorting only.\\
+ZPFUN[T] \> = T calculate the partition function from data on stream
+ILEV;\\
+ \> = F the partition function is not calculated but set to value Q read
+in.\\
+ITRA[13] \>  input stream transitions file from DIPOLE3 (unformatted).\\
+ILEV[14] \>  formatted input stream with energy levels for the
+partition function.\\
+\>The first eigenenergy on ILEV must be the ground state ie J=0, (IPAR=0).\\
+\>This is the zero energy of the problem if ZPFUN=T.\\
+ISPE[15] \>  stream for the sorted transitions (unformatted).\\
+ITEM[16] \>  scratch file  (unformatted).\\
+\\
+The following are only used if ZSORT = T.
+\\
+WSMIN[0.0d0]  minimum transition frequency in \cm\ for which
+data sorted.\\
+WSMAX[1.0d6]  maximum transition frequency in \cm\ for which
+data sorted.\\
+EMIN[$-$1.0d27] minimum value of energy of lower state, E", in \cm\ for which
+data sorted.\\
+EMAX[+1.0d27] maximum value of energy of lower state, E", in \cm\ for which
+data sorted.\\
+JMAX[all] \> maximum value of J", the angular momentum of the lower state, \\
+\> for which data sorted.\\
+SMIN[0.0] \> minimum linestrength (in D$^2$) for which data sorted.\\
+GZ[0.0] \> ground state energy in cm$^{-1}$.\\
+\\
+{\bf Line 2: TITLE} (9A8)\\
+A 72 character title.\\
+\\
+{\bf Line 3: GE, GO} (2D10.0) \\
+\\
+GE[1.0d0] \> nuclear-spin times symmetry-degeneracy factors for \\
+\> AB$_2$ molecule (ie $\mid$ IDIA $\mid$ = 2) for the even (IPAR=0).\\
+GO[1.0d0] \> nuclear-spin times symmetry-degeneracy factors for homonuclear\\
+\> AB$_2$ molecule (ie $\mid$ IDIA $\mid$ = 2) for the odd (IPAR=1).\\
+\\
+{\bf Line 4: TEMP, XMIN, WMIN, WMAX, DWL,Q} (6F10.0) \\
+\\
+TEMP \> temperature in K.\\
+XMIN \> lowest relative intensity printed.\\
+WMIN[0.0] \> minimum transition frequency required in \cm.\\
+WMAX[all] \> maximum transition frequency required in \cm.\\
+DWL[0.0] \> profile half width, in \cm\ or $\mu$m depending on ZFREQ,
+used if ZPROF = T and ZDOP = F.\\
+Q[1.0] \> value of the partition function, only used if ZPFUN = F.\\
+\\
+
+{\bf Line 5: NAMELIST/SPE/}\\
+\\
+EMIN1[$-$1.0d27]  minimum value of energy of lower state, E", in \cm\ for which
+data printed.\\
+EMAX1[+1.0d27]  maximum value of energy of lower state, E", in \cm\ for which
+data printed.\\
+EMIN2[$-$1.0d27]  minimum value of energy of upper state, E', in \cm\ for which
+data printed.\\
+EMAX2[+1.0d27]  maximum value of energy of upper state, E', in \cm\ for which
+data printed.\\
+JMAX[all] \> maximum value of J", the lower state angular momentum, for which
+data printed.\\
+ZEMIT[F] \> = F calculates integrated absorption coefficient.\\
+         \> = T calculates emissivities.\\
+ZPLOT[F] \> = T writes computed spectrum to stream IPLOT.\\
+IPLOT[20] \> output stream for formatted file containing spectral data.\\
+ZPROF[F] \> = T gives spectrum at NPOINTS points with  Gaussian
+line profiles;\\
+         \> only used with ZPLOT = T, when results are on stream IPLOT.\\
+         \> = F generates stick spectrum.\\
+NPOINTS[3000] number of points at which spectrum is stored if ZPROF = T.\\
+ZDOP[F] \> = T use thermal Doppler half width for spectral profile.\\
+XMOLM[18.0] molecular mass in amu. Only used if ZDOP=T.\\
+ZENE[F] \> = T write assignments with lines to IPLOT.\\
+        \> = F only line position and intensity to IPLOT\\
+        \> Only used if ZPROF = F.\\
+IDAT[19] \> Scratch file used to construct profiles (formatted),\\
+\> used if ZPROF = T and ZPLOT = T.\\
+ZLIST[F] \> = T write transition data to linelist file on stream ILIST.\\
+ILIST[36] \> output stream for formatted linelist if ZLIST=T.\\
+PRTPR[0.1d0] relative intensity threshold for printing results.\\
+TINTE[1.0D-15] absolute intensity threshold for printing results.\\
+ZFREQ[T] \> = T, stream IPLOT contains wavenumber (\cm ) as first column.\\
+         \> = F, stream IPLOT contains wavelength ($\mu$m) as first
+column.\\
+ZEINST[F] \> = T, stream IPLOT contains spin weighted Einstein A
+coefficient\\
+\> as second column. In this case ZEMIT = T. is forced.\\
+          \> = F, stream IPLOT contains intensity as second column.\\
+\end{tabbing}
+
+\section{Input for XPECT3}
+
+XPECT3 requires wavefunctions as generated by DVR3DRJZ on unit IWAVE
+(ZPERP=F only), or ROTLEV3/ROTLEV3B on units KVEC or KVEC2. An additional
+four lines of standard input are required:
+
+\vskip 0.2cm
+\begin{tabbing}
+ZMORSE[T]i\=    fdasdfsasdfsdfg\=   \=             \kill
+{\bf Line 1: NAMELIST/PRT/}\\
+\\
+ZPRINT[F] \> = T supplies extra print out for debugging purposes.\\
+ZTRA[T] \> = T writes property data to stream ITRA.\\
+ZFORM[F] \> = T use formatted writes to stream ITRA.\\
+ZFIT[F] \> = T potential energy fit being performed\\
+\> = F standard expectation value run.\\
+ZSTART[F] \> = T initiates the output file ITRA;\\
+    \> = F writes data to the end of existing file on stream ITRA.\\
+    \> (Only used if ZFIT = F.)\\
+IKET[11] \> input stream from DVR3DRJZ/ROTLEV3/ROTLEV3B (unformatted).\\
+ITRA[12] \>  output stream for properties (if ZTRA= T).\\
+ITRA0[28] \> derivatives computed by XPECT3 for ground state.\\
+ \> (Only used if ZFIT = T.)\\
+\\
+{\bf Line 2: TITLE} (9A8)\\
+A 72 character title.\\
+\\
+{\bf Line 3: LPOT, NPROPIN, NPRT, NV1} (5I5)\\
+\\
+LPOT \> number of Gauss-Legendre quadrature points.\\
+\> (Ignored if $J=0$).\\
+NPROPIN[1]\> number of properties to be considered.\\
+NPRT [NPROPIN] total possible number of properties.\\
+NV1[all] \> number of eigenfunctions considered.\\
+\\
+{\bf Line 4: (IPROP(I), I =1, NPROPIN)} (20I5) \\
+Pointers to the properties in array IPROP to be considered.
+Default is 1,2,\dots,NPROPIN. \\
+Values must be unique and in the range 1 to NPRT.\\
+\end{tabbing}
+
+In the version of DVR3D, which produces line lists for transitions between different electronic states (Born-Oppenheimer approximation) the DVR3DRJZ and ROTLEV programs are identical as in the ro-vibrational version of DVR3D. In DIPOLE3 there are extra input parameters:
+\section{Input for DIPOLE3 (UV)}
+\begin{tabbing}
+{\bf Line 4: ZPELOWER, ZPEUPPER, TE}  \\
+ZPELOWER \> zero point energy of the lower electronic state [cm$^{-1}$] \\
+ZPEUPPER \> zero point energy of the upper electronic state  [cm$^{-1}$] \\
+TE \> vertical excitation energy (Te) between the lower and the upper electronic state [cm$^{-1}$] \\
+\end{tabbing}
+
+and SUBROUTINE DIPD is required. The DIPD subroutine in this case should contain respective components of the transition dipole moment surface between two different electronic states. Input wavefunctions (KVEC and KVEC2) should be provided from separate ROTLEV calculations for the lower and the upper electronic state. 
+
+\end{document}             % End of document.
