@@ -1,5 +1,5 @@
  &PRT ZR2R1=.FALSE.,                          
-      zembed=.false.,ztran=.true., /
+      zembed=.false.,ztran=.true.,zpfun=.true. /
     3
    21    0  400  36 1000 2000    2    1   20    1
  H3+: J=0

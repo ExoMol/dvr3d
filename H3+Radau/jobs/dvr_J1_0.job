@@ -1,4 +1,4 @@
- &PRT zrot=.true., ztran=.true.,  zlin=.false.,  zcut=.false., zperp=.true./
+ &PRT zrot=.true., ztran=.true.,  zlin=.true.,  zcut=.false., zperp=.true./
     3
    28    1  100   40  500 2500   -2    0         0
  H3+: RADAU COORD Z-PERP EMBEDDING

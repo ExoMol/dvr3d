@@ -20,7 +20,7 @@ test : ${TEST_DIR}
 
 water : 
 	cd water; \
-	make test ; 
+	make rot.out ; 
 
 HCN : 
 	cd HCN; \

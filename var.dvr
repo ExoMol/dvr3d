@@ -1,7 +1,7 @@
 F90      =ifort
 DEBUG    = #-openmp -check all -traceback
-F90_OPTS = -O0 -xP -traceback -check all 
-LIBS= -mkl=sequential  # -llapack 
+F90_OPTS = -O0  -traceback -check all 
+LIBS= -qmkl=sequential  # -llapack 
 REL_PATH =source/
 OBJ =obj/
-LD_LIBRARY_PATH=/usr/local/intel/Compiler/11.1/059/mkl/lib/32/
+

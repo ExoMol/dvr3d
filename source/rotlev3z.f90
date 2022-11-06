@@ -148,7 +148,7 @@
       ierr26=abs(ipar_1)
       ierr27=abs(ipar_2-1)
       if (ierr26.gt.0) then
-         write(6,850) ivec,ipar
+         write(6,850) ivec,ipar_2
          stop
       endif
       if (ierr27.gt.0) then
@@ -2520,7 +2520,7 @@ end do !i2
          endif
          ip=mod(jrot+kpar,2)
          write(ilev,1025) jrot,ip,0,0,(2-4*iqpar),nevalp
- 1025    format(6i4)
+ 1025    format(6i6)
          write(ilev,1026) eval
  1026    format(4d20.12)
       endif

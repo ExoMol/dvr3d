@@ -35,10 +35,12 @@
                     kbass,npnt1,npnt2,npntt
       COMMON /OUTP/ toler,thresh,ilev,iwave,jscr,jvec,jvec2,kvec,kvec2,&
                     iscr,ires,irf1,irf2,zpham,zpvec,zdcore,z1da,&
-                    zembed,zvec,zquad2,zpfun,zdiag,ztran,zptra
+                    zembed,zvec,zquad2,zpfun,zdiag,ztran,zptra,&
+                    zpseg
       NAMELIST/PRT/ toler,thresh,ilev,iwave,jscr,jvec,jvec2,kvec,kvec2,&
                     iscr,ires,irf1,irf2,&
-                    zpham,zpvec,zdcore,zvec,zpfun,zdiag,ztran,zptra
+                    zpham,zpvec,zdcore,zvec,zpfun,zdiag,ztran,zptra,&
+                    zpseg
    
       WRITE(6,1000)
  1000 FORMAT(5x,'PROGRAM ROTLEV3 (VERSION OF March 2002):',/)
@@ -100,12 +102,12 @@
 
       COMMON /OUTP/ toler,thresh,ilev,iwave,jscr,jvec,jvec2,kvec,kvec2,&
                     iscr,ires,irf1,irf2,zpham,zpvec,zdcore,z1da,&
-                    zembed,zvec,zquad2,zpfun,zdiag,ztran,zptra
+                    zembed,zvec,zquad2,zpfun,zdiag,ztran,zptra,zpseg
       DATA TOLER/0.0D0/,THRESH/0.1D0/,ZPHAM/.FALSE./,ZPVEC/.FALSE./,&
            iwave/26/,ZVEC/.FALSE./,JVEC/3/,JVEC2/2/,ISCR/10/,IRES/0/,&
            ZTRAN/.FALSE./,KVEC/8/,KVEC2/9/,ZPTRA/.FALSE./,jscr/7/,&
            ZPFUN/.FALSE./,ILEV/14/,ZDIAG/.TRUE./,zdcore/.false./,&
-           z1da/.false./,IRF1/21/,IRF2/22/
+           z1da/.false./,IRF1/21/,IRF2/22/,zpseg/.false./
       END
 
 !####################################################################################
@@ -147,19 +149,29 @@
                     kbass,npnt1,npnt2,npntt
       COMMON /OUTP/ toler,thresh,ilev,iwave,jscr,jvec,jvec2,kvec,kvec2,&
                     iscr,ires,irf1,irf2,zpham,zpvec,zdcore,z1da,&
-                    zembed,zvec,zquad2,zpfun,zdiag,ztran,zptra
+                    zembed,zvec,zquad2,zpfun,zdiag,ztran,zptra,zpseg
       CHARACTER(len=8) TITLE(9)
       DOUBLE PRECISION, DIMENSION(3) :: xmass
       DATA X0/0.0D0/
 
+      if (zpseg==.true.) then 
+      OPEN(UNIT=iwave,FORM='UNFORMATTED',recordtype='segmented')
+      open(unit=IRF2,form='unformatted',recordtype='segmented')
+      else 
       OPEN(UNIT=iwave,FORM='UNFORMATTED')
-      open(unit=IRF2,form='unformatted')
+      open(unit=IRF2,form='unformatted')     
+      end if 
+
 
       READ(iwave) IDIA,IPAR,npntt,npnt1,npnt2,JROT,KMIN0,MEVAL,nlim
       read(IWAVE) ZEMBED,ZMORS1,ZMORS2,XMASS,G1,G2,z1da,ZQUAD2
 
       IF(.NOT. ZDIAG) THEN
-         OPEN(UNIT=IRF1,FORM='UNFORMATTED')
+         if (zpseg==.true.) then 
+            OPEN(UNIT=IRF1,FORM='UNFORMATTED',recordtype='segmented')
+         else 
+            OPEN(UNIT=IRF1,FORM='UNFORMATTED')
+         end if    
          WRITE(IRF1) IDIA,IPAR,npntt,npnt1,npnt2,JROT,KMIN0,MEVAL,nlim
          WRITE(IRF1) ZEMBED,ZMORS1,ZMORS2,XMASS,G1,G2,z1da,ZQUAD2
       ENDIF
@@ -491,7 +503,7 @@
                     kbass,npnt1,npnt2,npntt
       COMMON /OUTP/ toler,thresh,ilev,iwave,jscr,jvec,jvec2,kvec,kvec2,&
                     iscr,ires,irf1,irf2,zpham,zpvec,zdcore,z1da,&
-                    zembed,zvec,zquad2,zpfun,zdiag,ztran,zptra
+                    zembed,zvec,zquad2,zpfun,zdiag,ztran,zptra,zpseg
 
       DIMENSION MVIB(NBLK)
       DOUBLE PRECISION, ALLOCATABLE, DIMENSION(:) :: DIAG,eval
@@ -500,6 +512,8 @@
       DOUBLE PRECISION, ALLOCATABLE, DIMENSION(:,:) :: bvec
       data x0/0.0d0/
 
+    
+      if (ztran .and. zpseg) open(unit=jscr,form='unformatted',recordtype='segmented')
       if (ztran) open(unit=jscr,form='unformatted')
       IF (abs(IRES) .EQ. 2) GOTO 20
       if (jrot.eq.1 .and. kmin.eq.0) then
@@ -564,7 +578,7 @@
       ALLOCATE(bvec(mbass,nvib),cvec(nvib, neval),dvec(mbass, neval))
 
           CALL DSTORE(iwave,jscr,jvec,KVEC,ZPTRA,&
-                      MVIB,DVEC,BVEC,CVEC,eval,nblk,1)
+                      MVIB,DVEC,BVEC,CVEC,eval,nblk,1,zpseg)
           DEALLOCATE(bvec,cvec,dvec)
       ENDIF
 
@@ -621,7 +635,7 @@
       IF (ZTRAN) THEN
        ALLOCATE(bvec(mbass,nvib),cvec(nvib, neval),dvec(mbass, neval))
           CALL DSTORE(iwave,jscr,JVEC2,KVEC2,ZPTRA,&
-                     MVIB,DVEC,BVEC,CVEC,eval,nblk-1,2)
+                     MVIB,DVEC,BVEC,CVEC,eval,nblk-1,2,zpseg)
           DEALLOCATE(bvec,cvec,dvec)
       ENDIF
  100  DEALLOCATE(eval)
@@ -686,7 +700,7 @@
                     kbass,npnt1,npnt2,npntt
       COMMON /OUTP/ toler,thresh,ilev,iwave,jscr,jvec,jvec2,kvec,kvec2,&
                     iscr,ires,irf1,irf2,zpham,zpvec,zdcore,z1da,&
-                    zembed,zvec,zquad2,zpfun,zdiag,ztran,zptra
+                    zembed,zvec,zquad2,zpfun,zdiag,ztran,zptra,zpseg
 
       DOUBLE PRECISION, DIMENSION(nlim) :: rm2
       DIMENSION MVIB(NBLK)
@@ -845,7 +859,7 @@
                     kbass,npnt1,npnt2,npntt
       COMMON /OUTP/ toler,thresh,ilev,iwave,jscr,jvec,jvec2,kvec,kvec2,&
                     iscr,ires,irf1,irf2,zpham,zpvec,zdcore,z1da,&
-                    zembed,zvec,zquad2,zpfun,zdiag,ztran,zptra
+                    zembed,zvec,zquad2,zpfun,zdiag,ztran,zptra,zpseg
 
       DOUBLE PRECISION, DIMENSION(0:MAXLEG,idvr) :: PLEG
       DOUBLE PRECISION, DIMENSION(idvr,nrad) :: dvrvec
@@ -914,7 +928,7 @@
                    kbass,npnt1,npnt2,npntt
       COMMON /OUTP/ toler,thresh,ilev,iwave,jscr,jvec,jvec2,kvec,kvec2,&
                    iscr,ires,irf1,irf2,zpham,zpvec,zdcore,z1da,&
-                   zembed,zvec,zquad2,zpfun,zdiag,ztran,zptra
+                   zembed,zvec,zquad2,zpfun,zdiag,ztran,zptra,zpseg
 
       DIMENSION MVIB(NBLK)
       DOUBLE PRECISION, dimension(*) :: diag
@@ -984,7 +998,7 @@
                     kbass,npnt1,npnt2,npntt
       COMMON /OUTP/ toler,thresh,ilev,iwave,jscr,jvec,jvec2,kvec,kvec2,&
                     iscr,ires,irf1,irf2,zpham,zpvec,zdcore,z1da,&
-                    zembed,zvec,zquad2,zpfun,zdiag,ztran,zptra
+                    zembed,zvec,zquad2,zpfun,zdiag,ztran,zptra,zpseg
       double precision, external :: vecvec
       external matvec,f02fjz
       save eshift
@@ -1056,7 +1070,7 @@
                     kbass,npnt1,npnt2,npntt
       COMMON /OUTP/ toler,thresh,ilev,iwave,jscr,jvec,jvec2,kvec,kvec2,&
                     iscr,ires,irf1,irf2,zpham,zpvec,zdcore,z1da,&
-                    zembed,zvec,zquad2,zpfun,zdiag,ztran,zptra
+                    zembed,zvec,zquad2,zpfun,zdiag,ztran,zptra,zpseg
 
       DOUBLE PRECISION, DIMENSION(neval) :: eval
       DOUBLE PRECISION, DIMENSION(neval) :: evalcm
@@ -1111,7 +1125,7 @@
          IP=1-KMIN
          IF (KMIN .GT. 1) IP=K1-1
          WRITE(ILEV,1025) JROT,IP,IDIA,IPAR,0,NEVAL,IBASS
- 1025    FORMAT(7I4)
+ 1025    FORMAT(7I6)
          WRITE(ILEV,1026) EVAL
  1026    FORMAT(4D20.12)
       ENDIF
@@ -1119,7 +1133,11 @@
 !        WRITE EIGENVALUES, EIGENVECTORS, ETC TO STREAM JVEC
          KZ=KMIN
          IF (KMIN .GT. 1) KZ=2-K1
-         OPEN(UNIT=JVEC,FORM='UNFORMATTED')
+         if (zpseg==.true.) then 
+            OPEN(UNIT=JVEC,FORM='UNFORMATTED',recordtype='segmented')
+         else 
+            OPEN(UNIT=JVEC,FORM='UNFORMATTED')
+         end if 
          REWIND JVEC
          WRITE(JVEC) JROT,KZ,IPAR,NEVAL,IBASS
          WRITE(JVEC) (MVIB(K),K=K1,NBLK)
@@ -1199,16 +1217,17 @@
 !##################################################################################
  
       SUBROUTINE DSTORE(iwave,jscr,jvec,KVEC,ZPTRA,&
-                       MVIB,D,B,C,energy,lblk,itra)
+                       MVIB,D,B,C,energy,lblk,itra,zpseg)
 
 !     DSTORE TRANSFORMS THE EIGENVECTORS OF THE SECOND VARIATIONAL #013
 !     STEP INTO ONES FOR THE FIRST STEP BASIS AND STORES THE
 !     RESULTS IN A FORM SUITABLE FOR program DIPOLE3.
 
-      IMPLICIT DOUBLE PRECISION(A-H,O-Y), LOGICAL(Z)
+      IMPLICIT DOUBLE PRECISION (A-H,O-Y), LOGICAL (Z)
       COMMON /SIZE/ NBASS,MBASS,IBASS,NEVAL,IPAR,IDIA,nlim,jrot,&
                     KMIN,NEVAL2,MEVAL,KEVAL,NVIB,NBLK,LOFF,LOFF0,&
                     kbass,npnt1,npnt2,npntt
+
 
       DIMENSION MVIB(lblk),NKBAS(lblk),lmin(lblk),lbasis(lblk)
       DOUBLE PRECISION, DIMENSION(MBASS,NVIB) :: B
@@ -1273,7 +1292,12 @@
          STOP
       ENDIF
 !     WRITE HEADER ON NEW FILE
-      OPEN(UNIT=KVEC,FORM='UNFORMATTED')
+      if (zpseg==.true.) then
+          write(235,*)"banane" 
+          OPEN(UNIT=KVEC,FORM='UNFORMATTED',recordtype='segmented')
+      else 
+          OPEN(UNIT=KVEC,FORM='UNFORMATTED')
+      end if 
       write(kvec) IDIA,IPAR,idvr,npnt1,npnt2,JROT1,KMIN1,NVAL
       write(kvec) ZEMBED,ZMORS1,ZMORS2,XMASS,G1,G2,.false.
       write(kvec) RE1,DISS1,WE1,RE2,DISS2,WE2
@@ -1352,7 +1376,7 @@
                     kbass,npnt1,npnt2,npntt
       COMMON /OUTP/ toler,thresh,ilev,iwave,jscr,jvec,jvec2,kvec,kvec2,&
                     iscr,ires,irf1,irf2,zpham,zpvec,zdcore,z1da,&
-                    zembed,zvec,zquad2,zpfun,zdiag,ztran,zptra
+                    zembed,zvec,zquad2,zpfun,zdiag,ztran,zptra,zpseg
 
       DOUBLE PRECISION, DIMENSION(max(mbass,neval,(npntt+1)**2)) :: B
       DOUBLE PRECISION, DIMENSION(neval) :: eval
@@ -1382,7 +1406,11 @@
       ENDIF
       if (ztran) then
 !        WRITE HEADER ON NEW FILE
-         OPEN(UNIT=KVEC1,FORM='UNFORMATTED')
+		 if (zpseg==.true.) then 
+            OPEN(UNIT=KVEC1,FORM='UNFORMATTED',recordtype='segmented')
+         else 
+            OPEN(UNIT=KVEC1,FORM='UNFORMATTED')
+         end if 
          write(kvec1) IDIA,IPAR,idvr,npnt1,npnt2,JROT,KMIN1,NEVAL
          write(kvec1) ZEMBED,ZMORS1,ZMORS2,XMASS,G1,G2,.false.
          write(kvec1) RE1,DISS1,WE1,RE2,DISS2,WE2
@@ -1435,7 +1463,7 @@
          ENDIF
          IP=1
          WRITE(ILEV,1025) JROT,IP,IDIA,IPAR,0,NEVAL,IBASS
- 1025    FORMAT(7I4)
+ 1025    FORMAT(7I6)
          WRITE(ILEV,1026) EVAL
  1026    FORMAT(4D20.12)
       ENDIF

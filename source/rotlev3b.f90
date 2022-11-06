@@ -56,32 +56,11 @@
 !     first for select, then onto main program
       call select 
 
-
-      call SYSTEM_CLOCK(itime0,irate2,imax2)
+      call SYSTEM_CLOCK(itime2,irate2,imax2) ! MP??? before was itime0
       itime=(itime2-itime0)/irate2
       write(6,1)itime
  1    format(/i10,' secs CPU time used'/)
 
-print *, "******************************************"
-print *, "HOSE-TAYLOR PROCEDURE STARTED"
-print *, "ADDED 27/05/2020 BY EAMON CONWAY FOR RADAU INTERNAL COORD."
-print *, "SEE FORT.88 FILE"
-print *, "FORMAT: J E(CM-1) KA KC PSI(K)^2 IPAR KMIN MOD(NU3,2)"
-print *, "PSI(K) IS THE LARGEST VALUE FOR ANY ALLOWED K"
-print *, "RULE IS VALID FOR PSI(K)^2>0.5"
-print *, "******************************************"
-
-
-if(kmin .eq. 2) then!THERE ARE SYMMETRIC AND ASYMMETRIC BASIS TO CONSIDER
-call hosetaylor(8)
-call hosetaylor(9)
-else if(kmin .eq. 1) then ! SYMMETRIC
-call hosetaylor(8)
-else if(kmin .eq. 0) then! ASYMMETRIC
-call hosetaylor(8)
-else
-continue
-end if
       stop
       end
 
@@ -133,370 +112,6 @@ end if
            irf1/21/,irf2/22/
       end
 
-
-!################################################
-! THIS IS AD ADDITIONAL ROUTINE FOR CALCULATING KA/KC IN BISECTOR EMBEDDING
-! ADDED BY E.CONWAY 27/05/2020
-!################################################
-
-subroutine hosetaylor(ifile)
-      implicit double precision (a-h,o-y), logical (z)
-namelist/prt/ toler,thresh,zpham,zpvec,zvec,ztran,zptra,&
-              zpfun,ilev,ivec,ivec2,jvec,jvec2,kvec,kvec2,&
-              zdiag,zdcore,iscr,ires,irf1,irf2
-
-integer :: idia,ipar,lmax,npnt1,npnt2,jrot,kmin,neval
-integer, intent(in) :: ifile 
-double precision :: ezero
-
-rewind(5)
-read(5,prt)
-read(5,5)  nvib,neval,kmin,ibass,neval2,npnt
-5 format(12i5)
-read(5,500)   title
-500 format(9a8)
-read(5,*) ezero
-
-open(unit=ifile,form='unformatted',recordtype='segmented')
-
-! reader header record to determine file structure  
-read(ifile) idia,ipar,lmax,npnt1,npnt2,jrot,kmin,neval
-rewind(ifile)
-If (jrot.eq.0) kmin=1
-jk=jrot+kmin
-
-If (idia .eq. -2 .and. jk .gt. 1) then
- !  print *, "Radau, 8 or 9"
-    call read_8or9_radau(ifile,jk,ezero)
-elseif (idia .eq. -2) then
- !  print *, "Radau, 26"
-    call read_26_radau(ifile,jk,ezero)
-else
-   print *, "ERROR, MUST USE RADAU"
-endif
-
-end subroutine
-
-!###################################################################
-
-subroutine read_26_radau(ifile,jk,ezero)
-
-    implicit double precision (a-h,o-y), logical (z)
-
-
-    integer,intent(in) :: ifile,jk
-      integer, allocatable ::  nbass(:), lmin(:), lbass(:), iv(:)
-      double precision, allocatable:: e(:), d(:)
-double precision, intent(in) :: ezero
-      dimension xm(3)
-    double precision :: component
-    character(len=4) :: state
-    integer :: parity
-
-  read(ifile) idia,ipar,lmax,npnt1,npnt2,jrot,kmin,neval
-  read(ifile) zembed,zmors1,zmors1,xmass,g1,g2,zncor,zquad2
- ! print *, zembed,zmors1,zmors1,xm,g1,g2,zncor,zquad2
-
-  read(ifile) re1,diss1,we1,re1,diss1,we1
- ! print *, re1,diss1,we1,re1,diss1,we1
-
-! PLEASE SPECIFY EZERO TO OBTAIN ENERGIES WRT ZERO POINT EQUILIBRIUM
-!ezero = 0.0d0
-
- ! if(ezero .eq. 0.0d0) print *, "WARNING: ZPE IS ZERO: LINE 190"
-
-
-  do i=1,5
-     read(ifile)
-  enddo
-  
-  read(ifile) iang2,ibass2
-!  print *, "iang2,ibass2 ",  iang2,ibass2
-  read(ifile)
-
-  read(ifile) meval2
-!  print *, "meval2 ",  meval2
-
-!get the enrgy levels
-  allocate( e(meval2) )
-  call getrow(e,meval2,ifile)
-!  print *, "energy levels in Hartrees"
-!  print *, e
-
-
-! D is consists of the values of the wavefunction as expressed on the
-! the DVR grid in the 3 coordinates, writen as a 3d array d(NALF,
-! NPNT1, NPNT2) NALF, NPNT1, NPNT2 will give the location on the DVR
-! grid for that value of the wavefunction.
-
-!get the eigenvectors
-
-if ( (MODULO(jrot,2) .eq. 0 ) ) THEN
-
-    if( (ipar .eq. 0) .and. (kmin .eq. 1) ) then
-    state = 'para'
-    label = 0
-    parity = 1
-    else if( (ipar .eq. 0) .and. (kmin .eq. 0) ) then
-    state = 'para'
-    label = 0
-    parity = -1
-    else if( (ipar .eq. 1) .and. (kmin .eq. 1) ) then
-    state = 'orth'
-    label = 1
-    parity = 1
-    else if( (ipar .eq. 1) .and. (kmin .eq. 0) ) then
-    state = 'orth'
-    label = 1
-    parity = -1
-    else
-    continue 
-    end if
-
-else if ( (MODULO(jrot,2) .eq. 1 ) ) THEN
-
-    if( (ipar .eq. 0) .and. (kmin .eq. 1) ) then
-    state = 'orth'
-    label = 1
-    parity = -1
-    else if( (ipar .eq. 0) .and. (kmin .eq. 0) ) then
-    state = 'orth'
-    label = 1
-    parity = 1
-    else if( (ipar .eq. 1) .and. (kmin .eq. 1) ) then
-    state = 'para'
-    label = 0
-    parity = -1
-    else if( (ipar .eq. 1) .and. (kmin .eq. 0) ) then
-    state = 'para'
-    label = 0
-    parity = 1
-    else 
-    continue
-    end if
-else
-continue
-end if
-
-if (kmin .eq. 0) ka =  1 
-if (kmin .eq. 1) ka = 1 - 1
-
-if(ka .eq. 0) then 
-kc=jrot
-!KA+KC EVEN
-if((mod((ka + kc),2) .eq. 0) .and. (state .eq. 'orth')) nu3=1
-if((mod((ka + kc),2) .eq. 0) .and. (state .eq. 'para')) nu3=0
-
-if((mod((ka + kc),2) .eq. 1) .and. (state .eq. 'orth')) nu3=0
-if((mod((ka + kc),2) .eq. 1) .and. (state .eq. 'para')) nu3=1
-
-else if(ka .gt. 0 ) then
-kc1 = jrot - ka
-p1=(-1.0d0)**kc1
-!----------
-kc2 = jrot + 1 - ka
-p2=(-1.0d0)**kc2
-
-
-
-if(parity .eq. p1) kc=kc1
-if(parity .eq. p2) kc=kc2
-if((mod((ka + kc),2) .eq. 0) .and. (state .eq. 'orth')) nu3=1
-if((mod((ka + kc),2) .eq. 0) .and. (state .eq. 'para')) nu3=0
-
-if((mod((ka + kc),2) .eq. 1) .and. (state .eq. 'orth')) nu3=0
-if((mod((ka + kc),2) .eq. 1) .and. (state .eq. 'para')) nu3=1
-else
-continue 
-end if
-
-
-  allocate( d(ibass2) )
-  do j=1, meval2
-     call getrow(d,ibass2,ifile)
-
-
-d=d**2
-
-!WAVE FUNCTION FOR EACH LEVEL IS READ AND SUMMED. THEN REPEAT OVER EACH BLOCK.
-component=0.0d0
-do i=1,ibass2
-component=component+d(i)
-end do
-
-write(88,"(i2,2x,f12.5,2x,i2,1x,i2,2x,f8.5,2x,i1,2x,i1,2x,i1)") jrot,(e(j)*2.19474624d+05 - ezero),ka,kc,component,label,kmin,nu3
-  enddo
-
-end subroutine read_26_radau
-
-!###################################################################
-
-subroutine read_8or9_radau(ifile,jk,ezero)
-
-  implicit double precision (a-h,o-y), logical (z)
-
-  integer,intent(in) :: ifile,jk
-  integer, allocatable ::  nbass(:), lmin(:), lbass(:)
-  double precision, allocatable:: e(:), d(:)
-double precision, intent(in) :: ezero
-double precision, allocatable :: sum(:), component(:,:)
-character(len=4) :: state
-integer :: parity
-double precision,allocatable :: biggest(:)
-integer, allocatable :: ka(:),kc(:),kc1(:),kc2(:),p1(:),p2(:),nu3(:)
-
-
-
-! PLEASE SPECIFY EZERO TO OBTAIN ENERGIES WRT ZERO POINT EQUILIBRIUM
-!ezero = 0.0d0
-
- ! if(ezero .eq. 0.0d0) print *, "WARNING: ZPE IS ZERO: LINE 336"
-
-  read(ifile) idia,ipar,lmax,npnt1,npnt2,jrot,kmin,neval
-  read(ifile) zembed,zmorse1,zmorse2,xm,g1,g2,zncor
- ! write(*,*) zembed,zmorse1,zmorse2,xm,g1,g2,zncor
-
-  read(ifile) re2,diss2,we2,re2,diss2,we2
-!  write(*,*) re2,diss2,we2,re2,diss2,we2
-
-
-  allocate( nbass(jk),lmin(jk),lbass(jk) )
-  read(ifile) mbass0,lmin,lbass,nbass
-  !write(*,*) mbass0,lmin,lbass,nbass
-
-  read(ifile) ! READ R
-
-  !read in the energies, Hartrees
-  read(ifile) neval
- ! write(*,*) neval 
-  allocate( e(neval) )
-  read(ifile) e
-
-
-
-allocate(sum(neval), component(neval,jk),biggest(neval),ka(neval),kc(neval),kc1(neval),&
-kc2(neval),p1(neval),p2(neval),nu3(neval))
-
-
-do i=1,neval
-sum(j)=0.0d0
-biggest(j)=0.0d0
-end do
-
-if ( (MODULO(jrot,2) .eq. 0 ) ) THEN
-
-    if( (ipar .eq. 0) .and. (kmin .eq. 1) ) then
-    state = 'para'
-    label = 0
-    parity = 1
-    else if( (ipar .eq. 0) .and. (kmin .eq. 0) ) then
-    state = 'para'
-    label = 0
-    parity = -1
-    else if( (ipar .eq. 1) .and. (kmin .eq. 1) ) then
-    state = 'orth'
-    label = 1
-    parity = 1
-    else if( (ipar .eq. 1) .and. (kmin .eq. 0) ) then
-    state = 'orth'
-    label = 1
-    parity = -1
-    else
-    continue 
-    end if
-
-else if ( (MODULO(jrot,2) .eq. 1 ) ) THEN
-
-    if( (ipar .eq. 0) .and. (kmin .eq. 1) ) then
-    state = 'orth'
-    label = 1
-    parity = -1
-    else if( (ipar .eq. 0) .and. (kmin .eq. 0) ) then
-    state = 'orth'
-    label = 1
-    parity = 1
-    else if( (ipar .eq. 1) .and. (kmin .eq. 1) ) then
-    state = 'para'
-    label = 0
-    parity = -1
-    else if( (ipar .eq. 1) .and. (kmin .eq. 0) ) then
-    state = 'para'
-    label = 0
-    parity = 1
-    else 
-    continue
-    end if
-else
-continue
-end if
-
-
-do k=1, jk
-allocate( d(nbass(k)*neval) )
-!print *, "K block ", k-1
-read(ifile) d
-d=d**2
-
-!WAVE FUNCTION FOR EACH LEVEL IS READ AND SUMMED. THEN REPEAT OVER EACH BLOCK.
-    do j=1, neval
-    component(j,k)=0.0d0
-        do i = (j-1)*nbass(k)+1, nbass(k)*(j)
-        sum(j) = sum(j) + d(i)
-        component(j,k) = component(j,k) + d(i) 
-        end do
-            if(k .eq. 1) then 
-            biggest(j)=component(j,k)
-            if (kmin .eq. 0) ka(j) =  k 
-            if (kmin .eq. 1) ka(j) = k - 1
-            else if ( (k .gt. 1) .and. ( component(j,k) .gt. biggest(j) )) then
-            biggest(j)=component(j,k)
-            if (kmin .eq. 0) ka(j) = k 
-            if (kmin .eq. 1) ka(j) = k - 1
-            else
-            continue
-            end if
-
-if(ka(j) .eq. 0) then 
-kc(j)=jrot
-!KA+KC EVEN
-if((mod((ka(j) + kc(j)),2) .eq. 0) .and. (state .eq. 'orth')) nu3(j)=1
-if((mod((ka(j) + kc(j)),2) .eq. 0) .and. (state .eq. 'para')) nu3(j)=0
-
-if((mod((ka(j) + kc(j)),2) .eq. 1) .and. (state .eq. 'orth')) nu3(j)=0
-if((mod((ka(j) + kc(j)),2) .eq. 1) .and. (state .eq. 'para')) nu3(j)=1
-
-else if(ka(j) .gt. 0 ) then
-kc1(j) = jrot - ka(j)
-p1(j)=(-1.0d0)**kc1(j)
-!----------
-kc2(j) = jrot + 1 - ka(j)
-p2(j)=(-1.0d0)**kc2(j)
-
-
-
-if(parity .eq. p1(j)) kc(j)=kc1(j)
-if(parity .eq. p2(j)) kc(j)=kc2(j)
-if((mod((ka(j) + kc(j)),2) .eq. 0) .and. (state .eq. 'orth')) nu3(j)=1
-if((mod((ka(j) + kc(j)),2) .eq. 0) .and. (state .eq. 'para')) nu3(j)=0
-
-if((mod((ka(j) + kc(j)),2) .eq. 1) .and. (state .eq. 'orth')) nu3(j)=0
-if((mod((ka(j) + kc(j)),2) .eq. 1) .and. (state .eq. 'para')) nu3(j)=1
-else
-continue 
-end if
-
-    end do
-deallocate( d )
-  enddo
-
-do j=1, neval
-write(88,"(i2,2x,f12.5,2x,i2,1x,i2,2x,f8.5,2x,i1,2x,i1,2x,i1)") jrot,(e(j)*2.19474624d+05 - ezero),ka(j),kc(j),biggest(j),label,kmin,nu3(j)
-end do
-
-
-
-
-end subroutine read_8or9_radau
 !########################################################################
       subroutine insize
 
@@ -538,7 +153,7 @@ end subroutine read_8or9_radau
       character(len=8) title(9)
       data x0/0.0d0/
 
-      open(unit=ivec,form='unformatted',recordtype='segmented')
+      open(unit=ivec,form='unformatted')
       open(unit=irf2,form='unformatted')
 
       read(ivec) idia,ipar,ndvr,nmax,nmax,jrot,kmin0,meval,nlim
@@ -1814,7 +1429,7 @@ end subroutine read_8or9_radau
       call rdcoef(coef2,ibass2,mvib(2),meval2,ivec)
 !     position second vectors file if it is required
       if (nblk .gt. 2) then
-         open(unit=ivec2,form='unformatted',recordtype='segmented')
+         open(unit=ivec2,form='unformatted')
          rewind ivec2
          do 10 i=1,5
          read(ivec2)
@@ -2383,7 +1998,7 @@ end subroutine read_8or9_radau
       nkmax=max(nkmax,nkbas(k))
    20 continue 
 !     write header on new file
-      open(unit=kvec,form='unformatted',recordtype='segmented')
+      open(unit=kvec,form='unformatted')
       write(kvec) idia,ipar,idvr,npnt1,npnt2,jrot1,kmin1,nval
       write(kvec) zembed,zmors1,zmors2,xmass,g1,g2,zncor
       write(kvec) re1,diss1,we1,re2,diss2,we2
@@ -2397,8 +2012,6 @@ end subroutine read_8or9_radau
 !     start transformation step
       allocate(b(nkmax,nvib))
       iiout=0
-
-
       do 50 k=1,nblk
 !     transform dvr basis to fbr in theta for current k-block
       call tofbr(nkbas(k),mvib(k),ivt,b,itra,idvr)
@@ -2415,7 +2028,6 @@ end subroutine read_8or9_radau
       call dgemm('N','N',nkbas(k),nval,mvib(k),x1,b,nkbas(k),c,mvib(k),&
                   x0,d,nkbas(k))
       call outrow(d,nkbas(k)*nval,kvec)
-
          if (zptra) then
             write(6,1020) k
  1020       format(/'Vectors for K-block',i3/)
@@ -2426,8 +2038,6 @@ end subroutine read_8or9_radau
          endif
    50 continue
       deallocate(b) 
-
-
       write(6,1050) jrot1,kmin1,ipar,nval,nend
  1050 format(//5x,'transformation completed successfully',&
              //5x,'for rotational state: jrot =',i3,', kmin =',i3,&
@@ -2436,7 +2046,6 @@ end subroutine read_8or9_radau
       rewind jvec
       rewind kvec
       return
-
       end
 !#######################################################################
       subroutine dstore1(itra,energy,idvr,ezero)
@@ -2472,7 +2081,7 @@ end subroutine read_8or9_radau
       if (itra.eq.1 .and. kmin0.eq.2 .and. kmin1.eq.0)  ipar=1-ipar
       if (ztran) then
 !        write header on new file
-         open(unit=kvec,form='unformatted',recordtype='segmented')
+         open(unit=kvec,form='unformatted')
          write(kvec) idia,ipar,idvr,npnt1,npnt2,jrot0,kmin1,neval
          write(kvec) zembed,zmors1,zmors2,xmass,g1,g2,zncor
          write(kvec) re1,diss1,we1,re2,diss2,we2
@@ -2524,7 +2133,7 @@ end subroutine read_8or9_radau
          endif
          ip=0
          write(ilev,1025) jrot,ip,0,0,(2-4*ipar),neval
- 1025    format(6i6)
+ 1025    format(5i4,i7)
          write(ilev,1026) (energy(i),i=1,neval)
  1026    format(4d20.12)
       endif
@@ -2763,5 +2372,3 @@ end subroutine read_8or9_radau
       return
 10    format(/)
       end
-
-!###########################

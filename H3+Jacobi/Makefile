@@ -1,65 +1,31 @@
-# Run test (test) or cleanup (clean). Paolo 
-# Test : dvr rot dip spt 
-include ../var.dvr 
-depo=scratch
-scratch_files= fort13_h3p_j0j1  fort26_h3p_j0_odd fort26_h3p_j1_even  fort8_h3p_j1_even fort9_h3p_j1_even  
-
+F90      =ifort
+DEBUG    = #-openmp -check all -traceback
+F90_OPTS = -O0  -traceback -check all -qopenmp
+LIBS= -qmkl=parallel  # -llapack 
+REL_PATH =source/
+OBJ =source
 
 null:
 	@echo Please specify test or clean
 
 test :
-	make J0 J1 dip spt  \
+	make dvr.out rot.out dip.out spc.out \
 
-J0 : dvr.out 
-	./dvr.out < jobs/dvrJ0.job > result.H3p.J0.dvr  ; \
-	cp fort.26 fort26_h3p_j0_odd ; 
 
-J1 : 
-	make J1_dvr J1_rot 
+dvr.out:  ../source/dvr3drjz.f90
+	${F90} ${F90_OPTS} ../${OBJ}/dvr3drjz.f90 source/pot_h3p.f90  -o dvr.out ${LIBS} ; 
 
-J1_dvr :  dvr.out 
-	./dvr.out < jobs/dvrJ1.job > result.H3p.J1even.dvr  ; \
-	cp fort.26 fort26_h3p_j1_even 
+rot.out: ../source/rotlev3.f90  ../source/f02fjf.f 
+	${F90} ${F90_OPTS}  ../${OBJ}/rotlev3.f90 ../${OBJ}/f02fjf.f  -o rot.out ${LIBS} ; \
 
-J1_rot : rot.out fort26_h3p_j1_even
-	@cp -f fort26_h3p_j1_even fort.26 ; \
-	./rot.out < jobs/rot.job > result.H3p.J1even.rot ; \
-	cp fort.8 fort8_h3p_j1_even  ; \
-	cp fort.9 fort9_h3p_j1_even  ; 
+spc.out : ../source/spectra.f90  ../source/dpsort.f
+	${F90}  ${F90_OPTS} ../${OBJ}/spectra.f90 ../${OBJ}/dpsort.f  -o spc.out ${LIBS} ;  \
 
-dip :  fort26_h3p_j0_odd fort8_h3p_j1_even  dip.out 
-	@cp fort26_h3p_j0_odd fort.11  ;  \
-	cp  fort8_h3p_j1_even fort.12  ;  \
-	./dip.out < jobs/dip.job > result.H3p.dip ;  \
+dip.out:  ../source/dipole3.f90
+	${F90}  ${F90_OPTS} ../${OBJ}/dipole3.f90  source/dip_h3p.f  -o dip.out ${LIBS} ; \
 
-spt : spc.out fort13_h3p_j0j1
-	@cp fort13_h3p_j0j1 fort.13 ; \
-	./spc.out < jobs/spec.job > result.H3p.spec ; 
-
-%_file : 
-	@cp ${depo}/$@  ./ 
-
-dvr.out:  dvr3drjz.o
-	${F90} ${F90_OPTS} ../${OBJ}/dvr3drjz.o source/pot_h3p.f90  -o dvr.out ${LIBS} ; 
-
-rot.out: rotlev3.o  f02fjf.o 
-	${F90} ${F90_OPTS}  ../${OBJ}/rotlev3.o ../${OBJ}f02fjf.o  -o rot.out ${LIBS} ; \
-
-spc.out : spectra.o  dpsort.o
-	${F90}  ${F90_OPTS} ../${OBJ}/spectra.o ../${OBJ}/dpsort.o  -o spc.out ${LIBS} ;  \
-
-dip.out:  dipole.o
-	${F90}  ${F90_OPTS} ../${OBJ}/dipole.o  source/dip_h3p.f  -o dip.out ${LIBS} ; \
-
-%.o: 
-	cd ../ ;  \
-	make $@ ; 
-
-${scratch_files}  : 
-	cp ${depo}/$@   ./  ;  
 
 clean:
-	@-rm fort* *_file result.H3p* *out *mod 
+	@-rm fort*  result.H3p* *out *mod 
 
 
